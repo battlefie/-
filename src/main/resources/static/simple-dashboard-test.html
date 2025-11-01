@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单仪表盘测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .stat .label {
+            color: #666;
+        }
+        .error {
+            color: red;
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>简单仪表盘测试</h1>
+        
+        <div>
+            <button onclick="testLogin()">测试登录</button>
+            <button onclick="testStudents()">测试学生API</button>
+            <button onclick="testUniversities()">测试大学API</button>
+            <button onclick="testApplications()">测试申请API</button>
+            <button onclick="loadAllData()">加载所有数据</button>
+        </div>
+        
+        <div id="status"></div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="number" id="studentCount">-</div>
+                <div class="label">学生总数</div>
+            </div>
+            <div class="stat">
+                <div class="number" id="universityCount">-</div>
+                <div class="label">大学数量</div>
+            </div>
+            <div class="stat">
+                <div class="number" id="applicationCount">-</div>
+                <div class="label">申请记录</div>
+            </div>
+        </div>
+        
+        <div id="data"></div>
+    </div>
+    
+    <script>
+        let token = null;
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+        
+        async function testLogin() {
+            try {
+                showStatus('正在测试登录...', 'info');
+                
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'password'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('登录响应:', data);
+                
+                if (data.code === 200) {
+                    token = data.data.token;
+                    showStatus('登录成功！Token: ' + token.substring(0, 20) + '...', 'success');
+                } else {
+                    showStatus('登录失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('登录错误: ' + error.message, 'error');
+                console.error('登录错误:', error);
+            }
+        }
+        
+        async function testStudents() {
+            if (!token) {
+                showStatus('请先登录', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('正在测试学生API...', 'info');
+                
+                const response = await fetch('/api/students', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('学生API响应:', data);
+                
+                if (data.code === 200) {
+                    document.getElementById('studentCount').textContent = data.data.length;
+                    showStatus('学生API测试成功！获取到 ' + data.data.length + ' 个学生', 'success');
+                    document.getElementById('data').innerHTML = '<h3>学生数据:</h3><pre>' + JSON.stringify(data.data, null, 2) + '</pre>';
+                } else {
+                    showStatus('学生API失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('学生API错误: ' + error.message, 'error');
+                console.error('学生API错误:', error);
+            }
+        }
+        
+        async function testUniversities() {
+            if (!token) {
+                showStatus('请先登录', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('正在测试大学API...', 'info');
+                
+                const response = await fetch('/api/universities', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('大学API响应:', data);
+                
+                if (data.code === 200) {
+                    document.getElementById('universityCount').textContent = data.data.length;
+                    showStatus('大学API测试成功！获取到 ' + data.data.length + ' 个大学', 'success');
+                } else {
+                    showStatus('大学API失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('大学API错误: ' + error.message, 'error');
+                console.error('大学API错误:', error);
+            }
+        }
+        
+        async function testApplications() {
+            if (!token) {
+                showStatus('请先登录', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('正在测试申请API...', 'info');
+                
+                const response = await fetch('/api/applications', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('申请API响应:', data);
+                
+                if (data.code === 200) {
+                    document.getElementById('applicationCount').textContent = data.data.length;
+                    showStatus('申请API测试成功！获取到 ' + data.data.length + ' 个申请', 'success');
+                } else {
+                    showStatus('申请API失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('申请API错误: ' + error.message, 'error');
+                console.error('申请API错误:', error);
+            }
+        }
+        
+        async function loadAllData() {
+            await testLogin();
+            if (token) {
+                await testStudents();
+                await testUniversities();
+                await testApplications();
+                showStatus('所有数据加载完成！', 'success');
+            }
+        }
+        
+        // 页面加载时自动测试
+        document.addEventListener('DOMContentLoaded', () => {
+            showStatus('页面已加载，点击按钮开始测试', 'info');
+        });
+    </script>
+</body>
+</html>

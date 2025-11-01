@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 留学客户管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="card">
+        <h1>留学客户管理系统</h1>
+        <h2>注册账号</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="email">邮箱</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="realName">真实姓名</label>
+                <input type="text" id="realName" name="realName" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">手机号</label>
+                <input type="tel" id="phone" name="phone">
+            </div>
+            <div class="form-group">
+                <label for="role">用户角色</label>
+                <select id="role" name="role" required>
+                    <option value="WRITER">文案</option>
+                    <option value="COUNSELOR">咨询顾问</option>
+                    <option value="ADMIN">管理员</option>
+                </select>
+            </div>
+            <button type="submit" class="btn">注册</button>
+        </form>
+        <div class="text-center">
+            <p>已有账号？<a href="/login.html">立即登录</a></p>
+            <p><a href="/index.html">返回首页</a></p>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        // 页面加载时检查权限
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUser = getUser();
+            if (!currentUser || currentUser.role !== 'ADMIN') {
+                // 不是管理员，显示提示并禁用表单
+                const form = document.getElementById('registerForm');
+                const submitBtn = form.querySelector('button[type="submit"]');
+                
+                submitBtn.disabled = true;
+                submitBtn.textContent = '只有管理员可以注册账号';
+                submitBtn.style.backgroundColor = '#ccc';
+                submitBtn.style.cursor = 'not-allowed';
+                
+                // 显示提示信息
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = '只有管理员可以注册账号，请联系管理员为您创建账号';
+                form.parentNode.insertBefore(alertDiv, form);
+                
+                // 禁用所有输入框
+                const inputs = form.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    input.disabled = true;
+                });
+            }
+        });
+        
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const currentUser = getUser();
+            if (!currentUser || currentUser.role !== 'ADMIN') {
+                showMessage('只有管理员可以注册账号', 'error');
+                return;
+            }
+            
+            const formData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                email: document.getElementById('email').value,
+                realName: document.getElementById('realName').value,
+                phone: document.getElementById('phone').value,
+                role: document.getElementById('role').value
+            };
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> 注册中...';
+            
+            try {
+                await register(formData);
+                showMessage('注册成功！', 'success');
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 1000);
+            } catch (error) {
+                showMessage(error.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '注册';
+            }
+        });
+    </script>
+</body>
+</html>
+

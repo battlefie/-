@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仪表盘 - 留学信息管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav a {
+            text-decoration: none;
+            color: #666;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav a:hover, .nav a.active {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .welcome-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .welcome-banner h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .welcome-banner p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card .number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card .label {
+            font-size: 1.1rem;
+            color: #666;
+        }
+        
+        .recent-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .recent-section h2 {
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th, .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status.accepted {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status.rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            🎓 留学管理系统
+        </div>
+        <div class="nav">
+            <a href="/dashboard-simple.html" class="active">仪表盘</a>
+            <a href="/students.html">学生管理</a>
+            <a href="/universities.html">大学信息</a>
+            <a href="/applications.html">申请管理</a>
+            <a href="#" onclick="logout()">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="welcome-banner">
+            <h1 id="userName">欢迎回来, 系统管理员!</h1>
+            <p>这是您的数据概览</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number" id="studentCount">-</div>
+                <div class="label">学生总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="universityCount">-</div>
+                <div class="label">大学数量</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="applicationCount">-</div>
+                <div class="label">申请记录</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="acceptedCount">-</div>
+                <div class="label">已录取</div>
+            </div>
+        </div>
+        
+        <div class="recent-section">
+            <h2>最近申请记录</h2>
+            <div id="recentApplications">
+                <div class="loading">正在加载数据...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 直接获取数据，不依赖认证
+        async function loadDashboardData() {
+            try {
+                // 先登录获取token
+                const loginResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'password'
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                if (loginData.code !== 200) {
+                    throw new Error('登录失败');
+                }
+                
+                const token = loginData.data.token;
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+                
+                // 获取学生数据
+                const studentsResponse = await fetch('/api/students', { headers });
+                const studentsData = await studentsResponse.json();
+                
+                // 获取大学数据
+                const universitiesResponse = await fetch('/api/universities', { headers });
+                const universitiesData = await universitiesResponse.json();
+                
+                // 获取申请数据
+                const applicationsResponse = await fetch('/api/applications', { headers });
+                const applicationsData = await applicationsResponse.json();
+                
+                // 更新统计数据
+                if (studentsData.code === 200) {
+                    document.getElementById('studentCount').textContent = studentsData.data.length;
+                }
+                
+                if (universitiesData.code === 200) {
+                    document.getElementById('universityCount').textContent = universitiesData.data.length;
+                }
+                
+                if (applicationsData.code === 200) {
+                    const applications = applicationsData.data;
+                    document.getElementById('applicationCount').textContent = applications.length;
+                    
+                    const acceptedCount = applications.filter(app => app.status === 'ACCEPTED').length;
+                    document.getElementById('acceptedCount').textContent = acceptedCount;
+                    
+                    // 显示最近的申请记录
+                    displayRecentApplications(applications.slice(0, 5));
+                }
+                
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                document.getElementById('recentApplications').innerHTML = 
+                    `<div class="error">加载数据失败: ${error.message}</div>`;
+            }
+        }
+        
+        function displayRecentApplications(applications) {
+            const container = document.getElementById('recentApplications');
+            
+            if (applications.length === 0) {
+                container.innerHTML = '<p>暂无申请记录</p>';
+                return;
+            }
+            
+            let html = '<table class="table"><thead><tr>';
+            html += '<th>学生姓名</th>';
+            html += '<th>大学名称</th>';
+            html += '<th>申请状态</th>';
+            html += '<th>申请日期</th>';
+            html += '</tr></thead><tbody>';
+            
+            applications.forEach(app => {
+                html += '<tr>';
+                html += `<td>${app.student ? app.student.name : 'N/A'}</td>`;
+                html += `<td>${app.universityName || 'N/A'}</td>`;
+                html += `<td><span class="status ${app.status.toLowerCase()}">${getStatusText(app.status)}</span></td>`;
+                html += `<td>${app.applicationDate ? new Date(app.applicationDate).toLocaleDateString() : 'N/A'}</td>`;
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                'PENDING': '待审核',
+                'SUBMITTED': '已提交',
+                'UNDER_REVIEW': '审核中',
+                'ACCEPTED': '已录取',
+                'REJECTED': '已拒绝',
+                'WAITLISTED': '候补'
+            };
+            return statusMap[status] || status;
+        }
+        
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                window.location.href = '/login.html';
+            }
+        }
+        
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', loadDashboardData);
+    </script>
+</body>
+</html>
+
+
+
+
+

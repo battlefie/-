@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级搜索 - 留学管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        @media (max-width: 1200px) {
+            .search-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        .expand-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .expand-button:hover {
+            background: #5568d3;
+        }
+        .collapsible-section {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
+        }
+        .collapsible-section.active {
+            display: block;
+        }
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+        .result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        }
+        .search-button {
+            width: 180px !important;
+            padding: 12px !important;
+            font-size: 1rem !important;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+        }
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .search-button-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .search-button-secondary {
+            background: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body style="background: #f5f5f5;">
+    <nav>
+        <div class="nav-content">
+            <div class="logo">🎓 留学管理系统</div>
+            <ul class="nav-links">
+                <li><a href="/dashboard.html">仪表盘</a></li>
+                <li><a href="/students.html">学生管理</a></li>
+                <li><a href="/universities.html">大学信息</a></li>
+                <li><a href="/applications.html">申请管理</a></li>
+                <li><a href="/advanced-search.html" style="color: #667eea; font-weight: bold;">🔍 高级搜索</a></li>
+                <li><a href="#" onclick="logout()">退出登录</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <h1>🔍 高级搜索</h1>
+                <p style="color: #666; margin-top: 10px; font-size: 0.95rem;">使用多个条件组合搜索学生、申请和相关信息</p>
+            </div>
+
+            <div class="card" style="max-width: none; padding: 25px;">
+                <form id="searchForm">
+                    <!-- 常用搜索条件（默认显示） -->
+                    <div class="search-grid">
+                        <div class="form-group">
+                            <label>学生姓名</label>
+                            <input type="text" id="studentName" placeholder="请输入学生姓名">
+                        </div>
+                        <div class="form-group">
+                            <label>学生手机号</label>
+                            <input type="text" id="studentPhone" placeholder="请输入手机号">
+                        </div>
+                        <div class="form-group">
+                            <label>学生来源</label>
+                            <select id="studentSource">
+                                <option value="">全部</option>
+                                <option value="社会生源">社会生源</option>
+                                <option value="四中国际部">四中国际部</option>
+                                <option value="农大">农大</option>
+                                <option value="47国际部">47国际部</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>咨询顾问</label>
+                            <select id="counselor">
+                                <option value="">全部</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>文案</label>
+                            <select id="writer">
+                                <option value="">全部</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 展开更多选项按钮 -->
+                    <button type="button" class="expand-button" onclick="toggleMoreOptions()">
+                        <span id="expandText">展开更多选项 ▼</span>
+                    </button>
+
+                    <!-- 更多搜索条件（默认隐藏） -->
+                    <div id="moreOptions" class="collapsible-section">
+                        <div class="search-grid">
+                            <div class="form-group">
+                                <label>现就读学校</label>
+                                <input type="text" id="currentSchool" placeholder="请输入学校名称">
+                            </div>
+                            <div class="form-group">
+                                <label>家庭住址</label>
+                                <input type="text" id="homeAddress" placeholder="请输入家庭住址">
+                            </div>
+                            <div class="form-group">
+                                <label>父亲姓名</label>
+                                <input type="text" id="fatherName" placeholder="请输入父亲姓名">
+                            </div>
+                            <div class="form-group">
+                                <label>母亲姓名</label>
+                                <input type="text" id="motherName" placeholder="请输入母亲姓名">
+                            </div>
+                            <div class="form-group">
+                                <label>父亲手机号</label>
+                                <input type="text" id="fatherPhone" placeholder="请输入手机号">
+                            </div>
+                            <div class="form-group">
+                                <label>母亲手机号</label>
+                                <input type="text" id="motherPhone" placeholder="请输入手机号">
+                            </div>
+                            <div class="form-group">
+                                <label>父亲工作单位</label>
+                                <input type="text" id="fatherCompany" placeholder="请输入工作单位">
+                            </div>
+                            <div class="form-group">
+                                <label>母亲工作单位</label>
+                                <input type="text" id="motherCompany" placeholder="请输入工作单位">
+                            </div>
+                            <div class="form-group">
+                                <label>申请国家</label>
+                                <input type="text" id="targetCountry" placeholder="如：美国、英国">
+                            </div>
+                            <div class="form-group">
+                                <label>申请学校</label>
+                                <input type="text" id="targetUniversity" placeholder="请输入学校名称">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 搜索按钮 -->
+                    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
+                        <button type="submit" class="search-button search-button-primary">🔍 开始搜索</button>
+                        <button type="button" class="search-button search-button-secondary" onclick="clearSearch()">🗑️ 清空条件</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 搜索结果 -->
+            <div id="resultsContainer" class="card" style="max-width: none; padding: 25px; margin-top: 20px; display: none;">
+                <h2 style="color: #667eea; margin-bottom: 20px; font-size: 1.3rem;" id="resultsTitle">搜索结果</h2>
+                <div id="results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/roleManager.js"></script>
+    <script>
+        let allStudents = [];
+        let allApplications = [];
+        let moreOptionsExpanded = false;
+
+        function toggleMoreOptions() {
+            const section = document.getElementById('moreOptions');
+            const buttonText = document.getElementById('expandText');
+            
+            if (moreOptionsExpanded) {
+                section.classList.remove('active');
+                buttonText.textContent = '展开更多选项 ▼';
+                moreOptionsExpanded = false;
+            } else {
+                section.classList.add('active');
+                buttonText.textContent = '收起更多选项 ▲';
+                moreOptionsExpanded = true;
+            }
+        }
+
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await performSearch();
+        });
+
+        async function performSearch() {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">正在搜索...</p>';
+            resultsContainer.style.display = 'block';
+
+            const criteria = {
+                studentName: document.getElementById('studentName').value.trim(),
+                studentPhone: document.getElementById('studentPhone').value.trim(),
+                studentSource: document.getElementById('studentSource').value,
+                currentSchool: document.getElementById('currentSchool').value.trim(),
+                homeAddress: document.getElementById('homeAddress').value.trim(),
+                fatherName: document.getElementById('fatherName').value.trim(),
+                motherName: document.getElementById('motherName').value.trim(),
+                fatherPhone: document.getElementById('fatherPhone').value.trim(),
+                motherPhone: document.getElementById('motherPhone').value.trim(),
+                fatherCompany: document.getElementById('fatherCompany').value.trim(),
+                motherCompany: document.getElementById('motherCompany').value.trim(),
+                targetCountry: document.getElementById('targetCountry').value.trim(),
+                targetUniversity: document.getElementById('targetUniversity').value.trim(),
+                counselor: document.getElementById('counselor').value,
+                writer: document.getElementById('writer').value
+            };
+
+            const results = [];
+            for (const student of allStudents) {
+                let match = true;
+                if (criteria.studentName && !student.name?.includes(criteria.studentName)) match = false;
+                if (criteria.studentPhone && !student.phone?.includes(criteria.studentPhone)) match = false;
+                if (criteria.studentSource && student.studentSource !== criteria.studentSource) match = false;
+                if (criteria.currentSchool && !student.currentSchool?.includes(criteria.currentSchool)) match = false;
+                if (criteria.homeAddress && !student.address?.includes(criteria.homeAddress)) match = false;
+                
+                // 检查顾问筛选条件
+                if (criteria.counselor && student.counselor && student.counselor.realName !== criteria.counselor) match = false;
+                
+                // 检查文案筛选条件
+                if (criteria.writer && student.writer && student.writer.realName !== criteria.writer) match = false;
+                
+                if (match) {
+                    try {
+                        const familyData = await apiRequest(`/family-info/student/${student.id}`);
+                        if (familyData.code === 200 && familyData.data) {
+                            const family = familyData.data;
+                            if (criteria.fatherName && !family.fatherName?.includes(criteria.fatherName)) continue;
+                            if (criteria.motherName && !family.motherName?.includes(criteria.motherName)) continue;
+                            if (criteria.fatherPhone && !family.fatherPhone?.includes(criteria.fatherPhone)) continue;
+                            if (criteria.motherPhone && !family.motherPhone?.includes(criteria.motherPhone)) continue;
+                            if (criteria.fatherCompany && !family.fatherCompany?.includes(criteria.fatherCompany)) continue;
+                            if (criteria.motherCompany && !family.motherCompany?.includes(criteria.motherCompany)) continue;
+                            results.push({ type: 'student', data: { ...student, family } });
+                        } else {
+                            results.push({ type: 'student', data: student });
+                        }
+                    } catch (e) {
+                        results.push({ type: 'student', data: student });
+                    }
+                }
+            }
+
+            displayResults(results);
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            const resultsTitle = document.getElementById('resultsTitle');
+            resultsTitle.textContent = `搜索结果 (共 ${results.length} 条)`;
+
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">未找到匹配的结果</p>';
+                return;
+            }
+
+            let html = '';
+            results.forEach(r => {
+                const s = r.data;
+                html += `
+                    <div class="result-item">
+                        <h3 style="color: #667eea; margin-bottom: 15px; font-size: 1.1rem;">${s.name || 'N/A'}</h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; font-size: 0.9rem;">
+                            <div><strong>手机号:</strong> ${s.phone || 'N/A'}</div>
+                            <div><strong>来源:</strong> ${s.studentSource || 'N/A'}</div>
+                            <div><strong>学校:</strong> ${s.currentSchool || 'N/A'}</div>
+                            <div><strong>咨询顾问:</strong> ${s.counselor ? s.counselor.realName : 'N/A'}</div>
+                            <div><strong>文案:</strong> ${s.writer ? s.writer.realName : 'N/A'}</div>
+                            ${s.family ? `
+                                <div><strong>父亲:</strong> ${s.family.fatherName || 'N/A'}</div>
+                                <div><strong>母亲:</strong> ${s.family.motherName || 'N/A'}</div>
+                                <div><strong>父亲单位:</strong> ${s.family.fatherCompany || 'N/A'}</div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            resultsDiv.innerHTML = html;
+        }
+
+        function clearSearch() {
+            document.getElementById('searchForm').reset();
+            document.getElementById('resultsContainer').style.display = 'none';
+        }
+
+        async function loadData() {
+            console.log('开始加载学生数据');
+            let page = 0;
+            let hasMore = true;
+            while (hasMore) {
+                console.log(`加载第 ${page} 页数据`);
+                const data = await apiRequest(`/students?page=${page}&size=100`);
+                console.log(`第 ${page} 页返回数据:`, data);
+                if (data.code === 200 && data.data.content) {
+                    allStudents = allStudents.concat(data.data.content);
+                    console.log(`已加载 ${allStudents.length} 条学生数据`);
+                    page++;
+                    hasMore = !data.data.last;
+                    if (page > 100) {
+                        console.warn('达到最大页数限制，停止加载');
+                        hasMore = false;
+                    }
+                } else {
+                    console.log('没有更多数据或请求失败');
+                    hasMore = false;
+                }
+            }
+            console.log('学生数据加载完成，总共', allStudents.length, '条');
+        }
+
+        async function loadCounselorsAndWriters() {
+            console.log('开始加载顾问和文案数据');
+            const data = await apiRequest('/users');
+            console.log('用户数据返回:', data);
+            if (data.code === 200) {
+                const counselors = data.data.filter(u => u.role === 'COUNSELOR');
+                const writers = data.data.filter(u => u.role === 'WRITER');
+                console.log('找到顾问', counselors.length, '个，文案', writers.length, '个');
+                
+                counselors.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.realName;
+                    opt.textContent = c.realName;
+                    document.getElementById('counselor').appendChild(opt);
+                });
+                
+                writers.forEach(w => {
+                    const opt = document.createElement('option');
+                    opt.value = w.realName;
+                    opt.textContent = w.realName;
+                    document.getElementById('writer').appendChild(opt);
+                });
+                console.log('顾问和文案下拉框已填充');
+            }
+        }
+
+        window.addEventListener('load', () => {
+            console.log('高级搜索页面初始化');
+            
+            // 应用权限控制
+            if (roleManager) {
+                console.log('应用角色控制');
+                roleManager.applyRoleBasedUI();
+            }
+            
+            console.log('开始加载数据');
+            loadData().then(() => {
+                console.log('学生数据加载完成，共', allStudents.length, '条');
+            });
+            
+            loadCounselorsAndWriters().then(() => {
+                console.log('顾问和文案数据加载完成');
+            });
+        });
+    </script>
+</body>
+</html>

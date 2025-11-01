@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生管理 - 留学客户管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body style="background: #f5f5f5;">
+    <nav>
+        <div class="nav-content">
+            <div class="logo">🎓 留学客户管理系统</div>
+            <ul class="nav-links">
+                <li><a href="/dashboard.html">仪表盘</a></li>
+                <li><a href="/students.html">学生管理</a></li>
+                <li><a href="/universities.html">大学信息</a></li>
+                <li><a href="/applications.html">申请管理</a></li>
+                <li><a href="/register.html" id="register-nav-link" style="display: none;">注册新用户</a></li>
+                <li><a href="#" onclick="logout()">退出登录</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h1>学生管理</h1>
+                    <button class="btn btn-small" onclick="showAddModal()">+ 添加学生</button>
+                </div>
+            </div>
+
+            <div class="card" style="max-width: none;">
+                <div id="studentsTable">
+                    <p style="text-align: center; color: #999;">加载中...</p>
+                </div>
+                <div id="pagination" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    <!-- 分页控件将在这里动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑学生模态框 -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">添加学生</h2>
+            <form id="studentForm">
+                <input type="hidden" id="studentId">
+                <input type="hidden" id="userId">
+                
+                <!-- 学生基本信息 -->
+                <h4 style="color: #667eea; margin-bottom: 15px;">学生基本信息</h4>
+                
+                <div class="form-group">
+                    <label for="name">姓名 *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentSource">学生来源</label>
+                    <select id="studentSource" name="studentSource">
+                        <option value="">请选择</option>
+                        <option value="社会生源">社会生源</option>
+                        <option value="四中国际部">四中国际部</option>
+                        <option value="农大">农大</option>
+                        <option value="47国际部">47国际部</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="status">学生状态</label>
+                    <select id="status" name="status">
+                        <option value="在途">在途</option>
+                        <option value="已退">已退</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="gender">性别</label>
+                    <select id="gender" name="gender">
+                        <option value="">请选择</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="nationality">国籍</label>
+                    <input type="text" id="nationality" name="nationality">
+                </div>
+                <div class="form-group">
+                    <label for="wechat">微信</label>
+                    <input type="text" id="wechat" name="wechat">
+                </div>
+                <div class="form-group">
+                    <label for="currentSchool">现就读学校</label>
+                    <input type="text" id="currentSchool" name="currentSchool">
+                </div>
+                <div class="form-group">
+                    <label for="enrollmentDate">入学时间</label>
+                    <input type="date" id="enrollmentDate" name="enrollmentDate">
+                </div>
+                <div class="form-group">
+                    <label for="channelSource">渠道来源</label>
+                    <input type="text" id="channelSource" name="channelSource">
+                </div>
+                <div class="form-group">
+                    <label for="contractDate">签约时间</label>
+                    <input type="date" id="contractDate" name="contractDate">
+                </div>
+                <div class="form-group">
+                    <label for="contractAmount">签约金额</label>
+                    <input type="number" step="0.01" id="contractAmount" name="contractAmount">
+                </div>
+                <div class="form-group">
+                    <label for="major">专业</label>
+                    <input type="text" id="major" name="major">
+                </div>
+                <div class="form-group">
+                    <label for="gpa">GPA</label>
+                    <input type="number" step="0.01" id="gpa" name="gpa">
+                </div>
+                <div class="form-group">
+                    <label for="toeflScore">托福成绩</label>
+                    <input type="number" id="toeflScore" name="toeflScore">
+                </div>
+                <div class="form-group">
+                    <label for="ieltsScore">雅思成绩</label>
+                    <input type="number" step="0.5" id="ieltsScore" name="ieltsScore">
+                </div>
+                <div class="form-group">
+                    <label for="greScore">GRE成绩</label>
+                    <input type="number" id="greScore" name="greScore">
+                </div>
+                <div class="form-group">
+                    <label for="gmatScore">GMAT成绩</label>
+                    <input type="number" id="gmatScore" name="gmatScore">
+                </div>
+                <div class="form-group">
+                    <label for="birthDate">出生日期</label>
+                    <input type="date" id="birthDate" name="birthDate">
+                </div>
+                <div class="form-group">
+                    <label for="idCard">身份证号</label>
+                    <input type="text" id="idCard" name="idCard">
+                </div>
+                <div class="form-group">
+                    <label for="address">地址</label>
+                    <input type="text" id="address" name="address">
+                </div>
+                <div class="form-group">
+                    <label for="email">邮箱</label>
+                    <input type="email" id="email" name="email">
+                </div>
+                <div class="form-group">
+                    <label for="phone">手机号</label>
+                    <input type="tel" id="phone" name="phone">
+                </div>
+                <div class="form-group">
+                    <label for="awards">获奖情况</label>
+                    <textarea id="awards" name="awards" rows="3" placeholder="请输入获奖情况"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="experiences">经历描述</label>
+                    <textarea id="experiences" name="experiences" rows="3" placeholder="请输入相关经历"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="notes">备注</label>
+                    <textarea id="notes" name="notes" rows="3" placeholder="请输入备注信息"></textarea>
+                </div>
+                
+                <!-- 分配信息 -->
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="counselorName">负责咨询顾问</label>
+                        <select id="counselorName" name="counselorName">
+                            <option value="">请选择咨询顾问</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="writerName">负责文案</label>
+                        <select id="writerName" name="writerName">
+                            <option value="">请选择文案</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 家庭信息部分 -->
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <h4 style="color: #667eea; margin-bottom: 15px;">家庭信息</h4>
+                
+                <!-- 父亲信息 -->
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="fatherName">父亲姓名</label>
+                        <input type="text" id="fatherName" name="fatherName">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="fatherBirthDate">父亲出生日期</label>
+                        <input type="date" id="fatherBirthDate" name="fatherBirthDate">
+                    </div>
+                </div>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="fatherPhone">父亲手机号</label>
+                        <input type="tel" id="fatherPhone" name="fatherPhone">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="fatherOccupation">父亲职业</label>
+                        <input type="text" id="fatherOccupation" name="fatherOccupation">
+                    </div>
+                </div>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="fatherCompany">父亲公司</label>
+                        <input type="text" id="fatherCompany" name="fatherCompany">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="fatherIncome">父亲收入（元）</label>
+                        <input type="number" step="0.01" id="fatherIncome" name="fatherIncome" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <!-- 母亲信息 -->
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="motherName">母亲姓名</label>
+                        <input type="text" id="motherName" name="motherName">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="motherBirthDate">母亲出生日期</label>
+                        <input type="date" id="motherBirthDate" name="motherBirthDate">
+                    </div>
+                </div>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="motherPhone">母亲手机号</label>
+                        <input type="tel" id="motherPhone" name="motherPhone">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="motherOccupation">母亲职业</label>
+                        <input type="text" id="motherOccupation" name="motherOccupation">
+                    </div>
+                </div>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="motherCompany">母亲公司</label>
+                        <input type="text" id="motherCompany" name="motherCompany">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="motherIncome">母亲收入（元）</label>
+                        <input type="number" step="0.01" id="motherIncome" name="motherIncome" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <!-- 家庭资产信息 -->
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <h4 style="color: #667eea; margin-bottom: 15px;">家庭资产信息</h4>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="annualIncome">年收入（元）</label>
+                        <input type="number" step="0.01" id="annualIncome" name="annualIncome" placeholder="0.00">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="realEstateValue">房产价值（元）</label>
+                        <input type="number" step="0.01" id="realEstateValue" name="realEstateValue" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="carValue">汽车价值（元）</label>
+                        <input type="number" step="0.01" id="carValue" name="carValue" placeholder="0.00">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="stockValue">股票价值（元）</label>
+                        <input type="number" step="0.01" id="stockValue" name="stockValue" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="fundValue">基金价值（元）</label>
+                        <input type="number" step="0.01" id="fundValue" name="fundValue" placeholder="0.00">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="depositValue">存款价值（元）</label>
+                        <input type="number" step="0.01" id="depositValue" name="depositValue" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="otherInvestmentValue">其他投资价值（元）</label>
+                    <input type="number" step="0.01" id="otherInvestmentValue" name="otherInvestmentValue" placeholder="0.00">
+                </div>
+                
+                <!-- 其他家庭信息 -->
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <h4 style="color: #667eea; margin-bottom: 15px;">其他信息</h4>
+                
+                <div class="form-group">
+                    <label for="familyAddress">家庭住址</label>
+                    <input type="text" id="familyAddress" name="familyAddress" placeholder="请输入详细家庭住址">
+                </div>
+                
+                <div class="form-group">
+                    <label for="familySize">家庭人口数</label>
+                    <input type="number" id="familySize" name="familySize" min="1" max="20" placeholder="3">
+                </div>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="emergencyContactName">紧急联系人姓名</label>
+                        <input type="text" id="emergencyContactName" name="emergencyContactName">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="emergencyContactPhone">紧急联系人电话</label>
+                        <input type="tel" id="emergencyContactPhone" name="emergencyContactPhone">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="emergencyContactRelation">紧急联系人关系</label>
+                    <select id="emergencyContactRelation" name="emergencyContactRelation">
+                        <option value="">请选择</option>
+                        <option value="父亲">父亲</option>
+                        <option value="母亲">母亲</option>
+                        <option value="兄弟姐妹">兄弟姐妹</option>
+                        <option value="配偶">配偶</option>
+                        <option value="其他亲属">其他亲属</option>
+                        <option value="朋友">朋友</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="familyNotes">备注</label>
+                    <textarea id="familyNotes" name="familyNotes" rows="3" placeholder="其他需要说明的家庭情况"></textarea>
+                </div>
+                
+                <button type="submit" class="btn">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 查看学生信息模态框 -->
+    <div id="viewStudentModal" class="modal">
+        <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" onclick="closeViewModal()">&times;</span>
+            <h2 id="viewStudentTitle">学生详细信息</h2>
+            
+            <div id="viewStudentContent">
+                <!-- 学生信息将在这里显示 -->
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e1e5e9;">
+                <button class="btn btn-secondary" onclick="closeViewModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/roleManager.js"></script>
+    <script>
+        let students = [];
+        let paginationData = { currentPage: 0, totalPages: 0, totalElements: 0, pageSize: 10 };
+
+        // 文案角色加载学生数据（通过申请关联）
+        async function loadWriterStudentData() {
+            try {
+                // 文案角色通过申请来查看相关学生信息
+                const data = await apiRequest('/applications');
+                if (data.code === 200) {
+                    // 从申请中提取学生信息
+                    const studentMap = new Map();
+                    data.data.forEach(application => {
+                        if (application.student && !studentMap.has(application.student.id)) {
+                            studentMap.set(application.student.id, application.student);
+                        }
+                    });
+                    students = Array.from(studentMap.values());
+                    displayStudents(students);
+                }
+            } catch (error) {
+                console.error('加载文案学生数据失败:', error);
+                if (roleManager) {
+                    roleManager.showPermissionDenied('无法加载学生信息');
+                }
+            }
+        }
+
+        async function loadStudents(page = 0) {
+            try {
+                // 检查权限
+                if (roleManager && roleManager.isWriter()) {
+                    // 文案角色只能看到分配给自己的申请相关学生信息
+                    await loadWriterStudentData();
+                } else {
+                    // 管理员和咨询顾问可以看到所有学生（使用分页）
+                    console.log('请求分页数据，page=', page);
+                    const data = await apiRequest(`/students?page=${page}&size=10`);
+                    console.log('返回数据:', data);
+                    if (data.code === 200) {
+                        // 检查返回的是分页数据还是列表数据
+                        if (data.data.content) {
+                            // 分页数据
+                            console.log('使用分页数据');
+                            students = data.data.content;
+                            paginationData = {
+                                currentPage: data.data.currentPage,
+                                totalPages: data.data.totalPages,
+                                totalElements: data.data.totalElements,
+                                pageSize: data.data.pageSize
+                            };
+                            console.log('分页信息:', paginationData);
+                            displayStudents(students);
+                            displayPagination();
+                        } else {
+                            // 列表数据（向后兼容）
+                            console.log('使用列表数据（非分页）');
+                            students = data.data;
+                            paginationData = {
+                                currentPage: 0,
+                                totalPages: 1,
+                                totalElements: students.length,
+                                pageSize: 10
+                            };
+                            displayStudents(students);
+                            displayPagination();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('加载学生数据失败:', error);
+                if (roleManager) {
+                    roleManager.showPermissionDenied('无法加载学生信息');
+                }
+            }
+        }
+
+        function displayPagination() {
+            const paginationDiv = document.getElementById('pagination');
+            
+            console.log('分页数据:', paginationData);
+            
+            // 总是显示分页信息，即使只有一页
+            let html = '';
+            
+            // 只有当有多页时才显示翻页按钮
+            if (paginationData.totalPages > 1) {
+                // 首页按钮
+                if (paginationData.currentPage > 0) {
+                    html += `<button class="btn btn-small" onclick="loadStudents(0)">首页</button>`;
+                    html += `<button class="btn btn-small" onclick="loadStudents(${paginationData.currentPage - 1})">上一页</button>`;
+                }
+                
+                // 尾页按钮
+                if (paginationData.currentPage < paginationData.totalPages - 1) {
+                    html += `<button class="btn btn-small" onclick="loadStudents(${paginationData.currentPage + 1})">下一页</button>`;
+                    html += `<button class="btn btn-small" onclick="loadStudents(${paginationData.totalPages - 1})">尾页</button>`;
+                }
+                
+                // 添加跳转功能
+                html += `<span style="margin-left: 20px;">
+                    <input type="number" id="pageJumpInput" min="1" max="${paginationData.totalPages}" 
+                           value="${paginationData.currentPage + 1}" 
+                           style="width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; margin: 0 5px;"
+                           onkeypress="if(event.key === 'Enter') jumpToPage()">
+                    <button class="btn btn-small" onclick="jumpToPage()">跳转</button>
+                </span>`;
+            }
+            
+            // 显示统计信息（总是显示）
+            html += `<span style="margin-left: 20px; color: #666;">共 ${paginationData.totalElements} 条记录，第 ${paginationData.currentPage + 1}/${paginationData.totalPages} 页</span>`;
+            
+            paginationDiv.innerHTML = html;
+        }
+        
+        function jumpToPage() {
+            const input = document.getElementById('pageJumpInput');
+            if (!input) return;
+            
+            const pageNumber = parseInt(input.value);
+            const totalPages = paginationData.totalPages;
+            
+            if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > totalPages) {
+                alert(`请输入1到${totalPages}之间的页数！`);
+                input.value = paginationData.currentPage + 1;
+                return;
+            }
+            
+            loadStudents(pageNumber - 1);
+        }
+
+        function displayStudents(students) {
+            const container = document.getElementById('studentsTable');
+            
+            if (students.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: #999;">暂无学生数据</p>`;
+                return;
+            }
+            
+            // 检查是否为管理员，只有管理员可以删除学生
+            const canDelete = roleManager && roleManager.isAdmin();
+            
+            let html = '<table><thead><tr><th>姓名</th><th>学生来源</th><th>状态</th><th>性别</th><th>国籍</th><th>现就读学校</th><th>专业</th><th>GPA</th><th>托福</th><th>雅思</th><th>微信</th><th>咨询顾问</th><th>文案</th><th>出生日期</th><th>操作</th></tr></thead><tbody>';
+            
+            students.forEach(student => {
+                html += `<tr>
+                    <td>${student.name || 'N/A'}</td>
+                    <td>${student.studentSource || 'N/A'}</td>
+                    <td>${student.status || 'N/A'}</td>
+                    <td>${student.gender || 'N/A'}</td>
+                    <td>${student.nationality || 'N/A'}</td>
+                    <td>${student.currentSchool || 'N/A'}</td>
+                    <td>${student.major || 'N/A'}</td>
+                    <td>${student.gpa || 'N/A'}</td>
+                    <td>${student.toeflScore || 'N/A'}</td>
+                    <td>${student.ieltsScore || 'N/A'}</td>
+                    <td>${student.wechat || 'N/A'}</td>
+                    <td>${student.counselor ? student.counselor.realName : 'N/A'}</td>
+                    <td>${student.writer ? student.writer.realName : 'N/A'}</td>
+                    <td>${student.birthDate || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-small btn-info" onclick="viewStudent(${student.id})">查看</button>
+                        <button class="btn btn-small" onclick="editStudent(${student.id})">编辑</button>
+                        ${canDelete ? `<button class="btn btn-small btn-danger" onclick="deleteStudent(${student.id})">删除</button>` : ''}
+                    </td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function showAddModal() {
+            // 检查权限
+            if (roleManager && !roleManager.hasPermission('student_management')) {
+                roleManager.showPermissionDenied('学生角色只能管理自己的信息');
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = roleManager && roleManager.isStudent() ? '完善我的资料' : '添加学生';
+            document.getElementById('studentForm').reset();
+            document.getElementById('studentId').value = '';
+            document.getElementById('userId').value = '';
+            
+            document.getElementById('studentModal').style.display = 'block';
+        }
+
+        async function editStudent(id) {
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+            
+            document.getElementById('modalTitle').textContent = '编辑学生';
+            document.getElementById('studentId').value = student.id;
+            document.getElementById('userId').value = '';
+            
+            // 学生基本信息
+            document.getElementById('name').value = student.name || '';
+            document.getElementById('studentSource').value = student.studentSource || '';
+            document.getElementById('status').value = student.status || '';
+            document.getElementById('gender').value = student.gender || '';
+            document.getElementById('birthDate').value = student.birthDate || '';
+            document.getElementById('nationality').value = student.nationality || '';
+            document.getElementById('idCard').value = student.idCard || '';
+            document.getElementById('address').value = student.address || '';
+            document.getElementById('email').value = student.email || '';
+            document.getElementById('phone').value = student.phone || '';
+            document.getElementById('wechat').value = student.wechat || '';
+            
+            // 教育信息
+            document.getElementById('currentSchool').value = student.currentSchool || '';
+            document.getElementById('enrollmentDate').value = student.enrollmentDate || '';
+            document.getElementById('channelSource').value = student.channelSource || '';
+            document.getElementById('contractDate').value = student.contractDate || '';
+            document.getElementById('contractAmount').value = student.contractAmount || '';
+            document.getElementById('major').value = student.major || '';
+            document.getElementById('gpa').value = student.gpa || '';
+            document.getElementById('toeflScore').value = student.toeflScore || '';
+            document.getElementById('ieltsScore').value = student.ieltsScore || '';
+            document.getElementById('greScore').value = student.greScore || '';
+            document.getElementById('gmatScore').value = student.gmatScore || '';
+            
+            // 其他信息
+            document.getElementById('awards').value = student.awards || '';
+            document.getElementById('experiences').value = student.experiences || '';
+            document.getElementById('notes').value = student.notes || '';
+            
+            // 设置咨询顾问和文案
+            document.getElementById('counselorName').value = student.counselor ? student.counselor.realName : '';
+            document.getElementById('writerName').value = student.writer ? student.writer.realName : '';
+            
+            // 加载家庭信息
+            try {
+                const familyResponse = await apiRequest(`/family-info/student/${id}`);
+                if (familyResponse.code === 200 && familyResponse.data) {
+                    const familyInfo = familyResponse.data;
+                    
+                    // 父亲信息
+                    document.getElementById('fatherName').value = familyInfo.fatherName || '';
+                    document.getElementById('fatherBirthDate').value = familyInfo.fatherBirthDate || '';
+                    document.getElementById('fatherPhone').value = familyInfo.fatherPhone || '';
+                    document.getElementById('fatherOccupation').value = familyInfo.fatherOccupation || '';
+                    document.getElementById('fatherCompany').value = familyInfo.fatherCompany || '';
+                    document.getElementById('fatherIncome').value = familyInfo.fatherIncome || '';
+                    
+                    // 母亲信息
+                    document.getElementById('motherName').value = familyInfo.motherName || '';
+                    document.getElementById('motherBirthDate').value = familyInfo.motherBirthDate || '';
+                    document.getElementById('motherPhone').value = familyInfo.motherPhone || '';
+                    document.getElementById('motherOccupation').value = familyInfo.motherOccupation || '';
+                    document.getElementById('motherCompany').value = familyInfo.motherCompany || '';
+                    document.getElementById('motherIncome').value = familyInfo.motherIncome || '';
+                    
+                    // 资产信息
+                    document.getElementById('annualIncome').value = familyInfo.annualIncome || '';
+                    document.getElementById('realEstateValue').value = familyInfo.realEstateValue || '';
+                    document.getElementById('carValue').value = familyInfo.carValue || '';
+                    document.getElementById('stockValue').value = familyInfo.stockValue || '';
+                    document.getElementById('fundValue').value = familyInfo.fundValue || '';
+                    document.getElementById('depositValue').value = familyInfo.depositValue || '';
+                    document.getElementById('otherInvestmentValue').value = familyInfo.otherInvestmentValue || '';
+                    
+                    // 其他信息
+                    document.getElementById('familyAddress').value = familyInfo.familyAddress || '';
+                    document.getElementById('familySize').value = familyInfo.familySize || '';
+                    document.getElementById('emergencyContactName').value = familyInfo.emergencyContactName || '';
+                    document.getElementById('emergencyContactPhone').value = familyInfo.emergencyContactPhone || '';
+                    document.getElementById('emergencyContactRelation').value = familyInfo.emergencyContactRelation || '';
+                    document.getElementById('familyNotes').value = familyInfo.notes || '';
+                }
+            } catch (error) {
+                console.log('未找到家庭信息或加载失败:', error);
+            }
+            
+            // 编辑时不显示密码字段（已移除）
+            
+            document.getElementById('studentModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('studentModal').style.display = 'none';
+        }
+
+        // 查看学生信息
+        async function viewStudent(id) {
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+            
+            // 更新标题
+            document.getElementById('viewStudentTitle').textContent = `学生详细信息 - ${student.name || '未知'}`;
+            
+            // 计算年龄
+            let age = 'N/A';
+            if (student.birthDate) {
+                const birthDate = new Date(student.birthDate);
+                const today = new Date();
+                age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+            }
+            
+            // 构建显示内容
+            let content = `
+                <style>
+                    .student-profile-header {
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 30px;
+                        border-radius: 15px;
+                        margin-bottom: 30px;
+                        text-align: center;
+                        position: relative;
+                        overflow: hidden;
+                    }
+                    .student-profile-header::before {
+                        content: '';
+                        position: absolute;
+                        top: -50%;
+                        right: -50%;
+                        width: 200%;
+                        height: 200%;
+                        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                        animation: float 6s ease-in-out infinite;
+                    }
+                    @keyframes float {
+                        0%, 100% { transform: translateY(0px) rotate(0deg); }
+                        50% { transform: translateY(-20px) rotate(180deg); }
+                    }
+                    .student-avatar {
+                        width: 80px;
+                        height: 80px;
+                        border-radius: 50%;
+                        background: rgba(255,255,255,0.2);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 36px;
+                        margin: 0 auto 15px;
+                        border: 3px solid rgba(255,255,255,0.3);
+                    }
+                    .student-name {
+                        font-size: 28px;
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                    }
+                    .student-role {
+                        font-size: 16px;
+                        opacity: 0.9;
+                        background: rgba(255,255,255,0.2);
+                        padding: 5px 15px;
+                        border-radius: 20px;
+                        display: inline-block;
+                    }
+                    .info-section {
+                        background: white;
+                        border-radius: 12px;
+                        padding: 25px;
+                        margin-bottom: 20px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        border-left: 4px solid #667eea;
+                    }
+                    .info-section h3 {
+                        color: #667eea;
+                        margin-bottom: 20px;
+                        font-size: 18px;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    .info-section h3::before {
+                        content: '';
+                        width: 4px;
+                        height: 20px;
+                        background: #667eea;
+                        border-radius: 2px;
+                    }
+                    .info-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                        gap: 15px;
+                    }
+                    .info-item {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 5px;
+                        padding: 12px;
+                        background: #f8f9fa;
+                        border-radius: 8px;
+                        border-left: 3px solid #667eea;
+                    }
+                    .info-item label {
+                        font-weight: 600;
+                        color: #495057;
+                        font-size: 13px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .info-item span {
+                        color: #212529;
+                        font-size: 15px;
+                        word-break: break-word;
+                    }
+                    .score-highlight {
+                        background: linear-gradient(135deg, #28a745, #20c997);
+                        color: white;
+                        padding: 6px 10px;
+                        border-radius: 6px;
+                        font-weight: bold;
+                        text-align: center;
+                        font-size: 14px;
+                    }
+                    .badge {
+                        display: inline-block;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        font-weight: 600;
+                    }
+                    .badge-success {
+                        background: #d4edda;
+                        color: #155724;
+                    }
+                    .badge-warning {
+                        background: #fff3cd;
+                        color: #856404;
+                    }
+                    .badge-info {
+                        background: #d1ecf1;
+                        color: #0c5460;
+                    }
+                    .empty-field {
+                        color: #6c757d;
+                        font-style: italic;
+                    }
+                </style>
+                
+                <div class="student-profile-header">
+                    <div class="student-avatar">👨‍🎓</div>
+                    <div class='student-name'>${student.name || '未知学生'}</div>
+                    <div class="student-role">学生档案</div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📋 基本信息</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>姓名</label>
+                            <span>${student.name || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>学生来源</label>
+                            <span>${student.studentSource ? `<span class="badge badge-info">${student.studentSource}</span>` : '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>学生状态</label>
+                            <span>${student.status ? `<span class="badge ${student.status === '在途' ? 'badge-success' : 'badge-warning'}">${student.status}</span>` : '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>性别</label>
+                            <span>${student.gender || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>出生日期</label>
+                            <span>${student.birthDate || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>年龄</label>
+                            <span>${age}岁</span>
+                        </div>
+                        <div class="info-item">
+                            <label>国籍</label>
+                            <span>${student.nationality || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>身份证号</label>
+                            <span>${student.idCard || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📞 联系方式</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>手机号码</label>
+                            <span>${student.phone || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>邮箱地址</label>
+                            <span>${student.email || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>微信</label>
+                            <span>${student.wechat || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <label>联系地址</label>
+                            <span>${student.address || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>🏫 教育信息</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>现就读学校</label>
+                            <span>${student.currentSchool || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>入学时间</label>
+                            <span>${student.enrollmentDate || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>专业</label>
+                            <span>${student.major || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>GPA成绩</label>
+                            <span>${student.gpa ? `<span class="score-highlight">${student.gpa}</span>` : '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📊 语言成绩</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>托福成绩</label>
+                            <span>${student.toeflScore ? `<span class="score-highlight">${student.toeflScore}</span>` : '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>雅思成绩</label>
+                            <span>${student.ieltsScore ? `<span class="score-highlight">${student.ieltsScore}</span>` : '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>GRE成绩</label>
+                            <span>${student.greScore ? `<span class="score-highlight">${student.greScore}</span>` : '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>GMAT成绩</label>
+                            <span>${student.gmatScore ? `<span class="score-highlight">${student.gmatScore}</span>` : '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>💼 业务信息</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>渠道来源</label>
+                            <span>${student.channelSource || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>签约时间</label>
+                            <span>${student.contractDate || '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>签约金额</label>
+                            <span>${student.contractAmount ? `¥${student.contractAmount.toLocaleString()}` : '<span class="empty-field">未填写</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>咨询顾问</label>
+                            <span>${student.counselor ? student.counselor.realName : '<span class="empty-field">未分配</span>'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>负责文案</label>
+                            <span>${student.writer ? student.writer.realName : '<span class="empty-field">未分配</span>'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>🏆 个人成就</h3>
+                    <div class="info-grid">
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <label>获奖情况</label>
+                            <span>${student.awards || '<span class="empty-field">暂无获奖记录</span>'}</span>
+                        </div>
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <label>个人经历</label>
+                            <span>${student.experiences || '<span class="empty-field">暂无经历描述</span>'}</span>
+                        </div>
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <label>备注信息</label>
+                            <span>${student.notes || '<span class="empty-field">暂无备注信息</span>'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 尝试加载家庭信息
+            try {
+                const familyResponse = await apiRequest(`/family-info/student/${id}`);
+                if (familyResponse.code === 200 && familyResponse.data) {
+                    const familyInfo = familyResponse.data;
+                    content += `
+                        <div class="info-section">
+                            <h3>👨‍👩‍👦 父亲信息</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>父亲姓名</label>
+                                    <span>${familyInfo.fatherName || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>出生日期</label>
+                                    <span>${familyInfo.fatherBirthDate || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>手机号码</label>
+                                    <span>${familyInfo.fatherPhone || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>职业</label>
+                                    <span>${familyInfo.fatherOccupation || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item" style="grid-column: 1 / -1;">
+                                    <label>公司/单位</label>
+                                    <span>${familyInfo.fatherCompany || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <h3>👩‍👩‍👦 母亲信息</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>母亲姓名</label>
+                                    <span>${familyInfo.motherName || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>出生日期</label>
+                                    <span>${familyInfo.motherBirthDate || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>手机号码</label>
+                                    <span>${familyInfo.motherPhone || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>职业</label>
+                                    <span>${familyInfo.motherOccupation || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item" style="grid-column: 1 / -1;">
+                                    <label>公司/单位</label>
+                                    <span>${familyInfo.motherCompany || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <h3>💼 家庭资产信息</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>年收入</label>
+                                    <span>${familyInfo.annualIncome ? `¥${Number(familyInfo.annualIncome).toLocaleString()}` : '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>父亲收入</label>
+                                    <span>${familyInfo.fatherIncome ? `¥${Number(familyInfo.fatherIncome).toLocaleString()}` : '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>母亲收入</label>
+                                    <span>${familyInfo.motherIncome ? `¥${Number(familyInfo.motherIncome).toLocaleString()}` : '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>房产价值</label>
+                                    <span>${familyInfo.realEstateValue ? `¥${Number(familyInfo.realEstateValue).toLocaleString()}` : '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>汽车价值</label>
+                                    <span>${familyInfo.carValue ? `¥${Number(familyInfo.carValue).toLocaleString()}` : '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>股票价值</label>
+                                    <span>${familyInfo.stockValue ? `¥${Number(familyInfo.stockValue).toLocaleString()}` : '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>基金价值</label>
+                                    <span>${familyInfo.fundValue ? `¥${Number(familyInfo.fundValue).toLocaleString()}` : '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>存款价值</label>
+                                    <span>${familyInfo.depositValue ? `¥${Number(familyInfo.depositValue).toLocaleString()}` : '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>其他投资</label>
+                                    <span>${familyInfo.otherInvestmentValue ? `¥${Number(familyInfo.otherInvestmentValue).toLocaleString()}` : '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label style="color: #667eea; font-weight: 700;">总资产</label>
+                                    <span style="font-weight: bold; color: #667eea; font-size: 18px;">${(() => {
+                                        const realEstate = Number(familyInfo.realEstateValue || 0);
+                                        const car = Number(familyInfo.carValue || 0);
+                                        const stock = Number(familyInfo.stockValue || 0);
+                                        const fund = Number(familyInfo.fundValue || 0);
+                                        const deposit = Number(familyInfo.depositValue || 0);
+                                        const otherInvestment = Number(familyInfo.otherInvestmentValue || 0);
+                                        const total = realEstate + car + stock + fund + deposit + otherInvestment;
+                                        return total > 0 ? `¥${total.toLocaleString()}` : '<span class="empty-field">未填写</span>';
+                                    })()}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <h3>🏠 其他信息</h3>
+                            <div class="info-grid">
+                                <div class="info-item" style="grid-column: 1 / -1;">
+                                    <label>家庭住址</label>
+                                    <span>${familyInfo.familyAddress || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>家庭人口数</label>
+                                    <span>${familyInfo.familySize || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>紧急联系人</label>
+                                    <span>${familyInfo.emergencyContactName || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>紧急联系电话</label>
+                                    <span>${familyInfo.emergencyContactPhone || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>紧急联系人关系</label>
+                                    <span>${familyInfo.emergencyContactRelation || '<span class="empty-field">未填写</span>'}</span>
+                                </div>
+                                ${familyInfo.notes ? `
+                                <div class="info-item" style="grid-column: 1 / -1;">
+                                    <label>备注</label>
+                                    <span>${familyInfo.notes}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    content += `
+                        <div class="info-section">
+                            <h3>👨‍👩‍👦 家庭信息</h3>
+                            <p style="color: #999; text-align: center; padding: 20px;">暂无家庭信息</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.log('加载家庭信息失败:', error);
+                content += `
+                    <div class="info-section">
+                        <h3>👨‍👩‍👦 家庭信息</h3>
+                        <p style="color: #999; text-align: center; padding: 20px;">该学生暂无家庭信息</p>
+                    </div>
+                `;
+            }
+            
+            // 设置内容和样式
+            document.getElementById('viewStudentContent').innerHTML = content;
+            document.getElementById('viewStudentModal').style.display = 'block';
+            
+            // 保存当前查看的学生ID，用于编辑功能
+            window.currentViewingStudentId = id;
+        }
+
+        // 关闭查看模态框
+        function closeViewModal() {
+            document.getElementById('viewStudentModal').style.display = 'none';
+            window.currentViewingStudentId = null;
+        }
+
+
+
+        function showMessage(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 9999;
+                max-width: 400px;
+                word-wrap: break-word;
+            `;
+            
+            if (type === 'success') {
+                alertDiv.style.backgroundColor = '#28a745';
+            } else if (type === 'error') {
+                alertDiv.style.backgroundColor = '#dc3545';
+            } else if (type === 'warning') {
+                alertDiv.style.backgroundColor = '#ffc107';
+                alertDiv.style.color = '#000';
+            } else {
+                alertDiv.style.backgroundColor = '#17a2b8';
+            }
+            
+            alertDiv.textContent = message;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        async function deleteStudent(id) {
+            if (!confirm('确定要删除这个学生吗？')) return;
+            
+            try {
+                const data = await apiRequest(`/students/${id}`, { method: 'DELETE' });
+                if (data.code === 200) {
+                    showMessage('删除成功', 'success');
+                    loadStudents();
+                }
+            } catch (error) {
+                showMessage('删除失败', 'error');
+            }
+        }
+
+        document.getElementById('studentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const studentId = document.getElementById('studentId').value;
+            
+            // 收集表单数据
+            const formData = {
+                // 学生基本信息
+                name: document.getElementById('name').value,
+                studentSource: document.getElementById('studentSource').value || null,
+                status: document.getElementById('status').value || null,
+                gender: document.getElementById('gender').value || null,
+                birthDate: document.getElementById('birthDate').value || null,
+                nationality: document.getElementById('nationality').value || null,
+                idCard: document.getElementById('idCard').value || null,
+                address: document.getElementById('address').value || null,
+                email: document.getElementById('email').value || null,
+                phone: document.getElementById('phone').value || null,
+                wechat: document.getElementById('wechat').value || null,
+                
+                // 教育信息
+                currentSchool: document.getElementById('currentSchool').value || null,
+                enrollmentDate: document.getElementById('enrollmentDate').value || null,
+                channelSource: document.getElementById('channelSource').value || null,
+                contractDate: document.getElementById('contractDate').value || null,
+                contractAmount: document.getElementById('contractAmount').value ? parseFloat(document.getElementById('contractAmount').value) : null,
+                major: document.getElementById('major').value || null,
+                gpa: document.getElementById('gpa').value ? parseFloat(document.getElementById('gpa').value) : null,
+                toeflScore: document.getElementById('toeflScore').value ? parseInt(document.getElementById('toeflScore').value) : null,
+                ieltsScore: document.getElementById('ieltsScore').value ? parseFloat(document.getElementById('ieltsScore').value) : null,
+                greScore: document.getElementById('greScore').value ? parseInt(document.getElementById('greScore').value) : null,
+                gmatScore: document.getElementById('gmatScore').value ? parseInt(document.getElementById('gmatScore').value) : null,
+                
+                // 其他信息
+                awards: document.getElementById('awards').value || null,
+                experiences: document.getElementById('experiences').value || null,
+                notes: document.getElementById('notes').value || null,
+                
+                // 分配信息
+                counselorName: document.getElementById('counselorName').value || null,
+                writerName: document.getElementById('writerName').value || null,
+                
+                // 家庭信息
+                familyInfo: {
+                    fatherName: document.getElementById('fatherName').value || null,
+                    fatherBirthDate: document.getElementById('fatherBirthDate').value || null,
+                    fatherPhone: document.getElementById('fatherPhone').value || null,
+                    fatherOccupation: document.getElementById('fatherOccupation').value || null,
+                    fatherCompany: document.getElementById('fatherCompany').value || null,
+                    fatherIncome: document.getElementById('fatherIncome').value ? parseFloat(document.getElementById('fatherIncome').value) : null,
+                    motherName: document.getElementById('motherName').value || null,
+                    motherBirthDate: document.getElementById('motherBirthDate').value || null,
+                    motherPhone: document.getElementById('motherPhone').value || null,
+                    motherOccupation: document.getElementById('motherOccupation').value || null,
+                    motherCompany: document.getElementById('motherCompany').value || null,
+                    motherIncome: document.getElementById('motherIncome').value ? parseFloat(document.getElementById('motherIncome').value) : null,
+                    annualIncome: document.getElementById('annualIncome').value ? parseFloat(document.getElementById('annualIncome').value) : null,
+                    realEstateValue: document.getElementById('realEstateValue').value ? parseFloat(document.getElementById('realEstateValue').value) : null,
+                    carValue: document.getElementById('carValue').value ? parseFloat(document.getElementById('carValue').value) : null,
+                    stockValue: document.getElementById('stockValue').value ? parseFloat(document.getElementById('stockValue').value) : null,
+                    fundValue: document.getElementById('fundValue').value ? parseFloat(document.getElementById('fundValue').value) : null,
+                    depositValue: document.getElementById('depositValue').value ? parseFloat(document.getElementById('depositValue').value) : null,
+                    otherInvestmentValue: document.getElementById('otherInvestmentValue').value ? parseFloat(document.getElementById('otherInvestmentValue').value) : null,
+                    familyAddress: document.getElementById('familyAddress').value || null,
+                    familySize: document.getElementById('familySize').value ? parseInt(document.getElementById('familySize').value) : null,
+                    emergencyContactName: document.getElementById('emergencyContactName').value || null,
+                    emergencyContactPhone: document.getElementById('emergencyContactPhone').value || null,
+                    emergencyContactRelation: document.getElementById('emergencyContactRelation').value || null,
+                    notes: document.getElementById('familyNotes').value || null
+                }
+            };
+            
+            try {
+                if (studentId) {
+                    // 编辑模式：更新学生信息和家庭信息
+                    console.log('开始更新学生信息，ID:', studentId);
+                    
+                    // 将顾问和文案姓名转换为ID
+                    let counselorId = null;
+                    let writerId = null;
+                    
+                    if (formData.counselorName) {
+                        try {
+                            const usersResponse = await apiRequest('/users');
+                            if (usersResponse.code === 200) {
+                                const counselor = usersResponse.data.find(u => u.realName === formData.counselorName && u.role === 'COUNSELOR');
+                                if (counselor) {
+                                    counselorId = counselor.id;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('获取顾问ID失败:', error);
+                        }
+                    }
+                    
+                    if (formData.writerName) {
+                        try {
+                            const usersResponse = await apiRequest('/users');
+                            if (usersResponse.code === 200) {
+                                const writer = usersResponse.data.find(u => u.realName === formData.writerName && u.role === 'WRITER');
+                                if (writer) {
+                                    writerId = writer.id;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('获取文案ID失败:', error);
+                        }
+                    }
+                    
+                    const studentData = {
+                        name: formData.name,
+                        studentSource: formData.studentSource,
+                        status: formData.status,
+                        gender: formData.gender,
+                        birthDate: formData.birthDate,
+                        nationality: formData.nationality,
+                        idCard: formData.idCard,
+                        address: formData.address,
+                        phone: formData.phone,
+                        email: formData.email,
+                        wechat: formData.wechat,
+                        currentSchool: formData.currentSchool,
+                        enrollmentDate: formData.enrollmentDate,
+                        channelSource: formData.channelSource,
+                        contractDate: formData.contractDate,
+                        contractAmount: formData.contractAmount,
+                        major: formData.major,
+                        gpa: formData.gpa,
+                        toeflScore: formData.toeflScore,
+                        ieltsScore: formData.ieltsScore,
+                        greScore: formData.greScore,
+                        gmatScore: formData.gmatScore,
+                        awards: formData.awards,
+                        experiences: formData.experiences,
+                        notes: formData.notes,
+                        counselorId: counselorId,
+                        writerId: writerId
+                    };
+                    
+                    console.log('更新数据:', studentData);
+                    
+                    // 更新学生基本信息
+                    const studentResponse = await apiRequest(`/students/${studentId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(studentData)
+                    });
+                    
+                    console.log('学生信息更新响应:', studentResponse);
+                    
+                    if (studentResponse.code === 200) {
+                        // 更新家庭信息
+                        try {
+                            // 先检查是否已有家庭信息
+                            const checkResponse = await apiRequest(`/family-info/student/${studentId}`);
+                            
+                            if (checkResponse.code === 200 && checkResponse.data) {
+                                // 已存在家庭信息，执行更新
+                                const familyInfoId = checkResponse.data.id;
+                                console.log('更新现有家庭信息，ID:', familyInfoId);
+                                
+                                // 获取学生信息来构建完整的Student实体
+                                console.log('查找学生ID:', studentId, '类型:', typeof studentId);
+                                console.log('当前学生数组:', students.map(s => ({id: s.id, type: typeof s.id, name: s.user?.realName})));
+                                
+                                let student = students.find(s => s.id == studentId);
+                                if (!student) {
+                                    // 如果本地数组中没有找到，尝试从API获取
+                                    console.log('本地未找到学生，尝试从API获取...');
+                                    try {
+                                        const studentResponse = await apiRequest(`/students/${studentId}`);
+                                        if (studentResponse.code === 200) {
+                                            student = studentResponse.data;
+                                            console.log('从API获取到学生信息:', student);
+                                        } else {
+                                            console.error('API返回错误:', studentResponse);
+                                            showMessage('无法找到学生信息', 'error');
+                                            return;
+                                        }
+                                    } catch (error) {
+                                        console.error('获取学生信息失败:', error);
+                                        showMessage('无法找到学生信息', 'error');
+                                        return;
+                                    }
+                                } else {
+                                    console.log('从本地数组找到学生信息:', student);
+                                }
+                                
+                                const familyData = {
+                                    studentId: studentId,
+                                    ...formData.familyInfo
+                                };
+                                
+                                const familyResponse = await apiRequest(`/family-info/${familyInfoId}`, {
+                                    method: 'PUT',
+                                    body: JSON.stringify(familyData)
+                                });
+                                
+                                console.log('家庭信息更新响应:', familyResponse);
+                                
+                                if (familyResponse.code === 200) {
+                                    showMessage('学生和家庭信息更新成功', 'success');
+                                } else {
+                                    showMessage('学生信息更新成功，但家庭信息更新失败: ' + familyResponse.message, 'warning');
+                                }
+                            } else {
+                                // 不存在家庭信息，创建新的
+                                console.log('创建新的家庭信息');
+                                
+                                // 获取学生信息来构建完整的Student实体
+                                console.log('查找学生ID:', studentId, '类型:', typeof studentId);
+                                console.log('当前学生数组:', students.map(s => ({id: s.id, type: typeof s.id, name: s.user?.realName})));
+                                
+                                let student = students.find(s => s.id == studentId);
+                                if (!student) {
+                                    // 如果本地数组中没有找到，尝试从API获取
+                                    console.log('本地未找到学生，尝试从API获取...');
+                                    try {
+                                        const studentResponse = await apiRequest(`/students/${studentId}`);
+                                        if (studentResponse.code === 200) {
+                                            student = studentResponse.data;
+                                            console.log('从API获取到学生信息:', student);
+                                        } else {
+                                            console.error('API返回错误:', studentResponse);
+                                            showMessage('无法找到学生信息', 'error');
+                                            return;
+                                        }
+                                    } catch (error) {
+                                        console.error('获取学生信息失败:', error);
+                                        showMessage('无法找到学生信息', 'error');
+                                        return;
+                                    }
+                                } else {
+                                    console.log('从本地数组找到学生信息:', student);
+                                }
+                                
+                                const familyData = {
+                                    studentId: studentId,
+                                    ...formData.familyInfo
+                                };
+                                
+                                console.log('发送的家庭信息数据:', JSON.stringify(familyData, null, 2));
+                                
+                                const familyResponse = await apiRequest('/family-info', {
+                                    method: 'POST',
+                                    body: JSON.stringify(familyData)
+                                });
+                                
+                                console.log('家庭信息创建响应:', familyResponse);
+                                
+                                if (familyResponse.code === 200) {
+                                    showMessage('学生和家庭信息更新成功', 'success');
+                                } else {
+                                    showMessage('学生信息更新成功，但家庭信息创建失败: ' + familyResponse.message, 'warning');
+                                }
+                            }
+                        } catch (familyError) {
+                            console.error('处理家庭信息失败:', familyError);
+                            showMessage('学生信息更新成功，但家庭信息处理失败', 'warning');
+                        }
+                        
+                        closeModal();
+                        loadStudents();
+                    } else {
+                        showMessage('更新失败: ' + studentResponse.message, 'error');
+                    }
+                } else {
+                    // 创建模式：创建新学生
+                    console.log('开始创建新学生');
+                    
+                    // 将顾问和文案姓名转换为ID
+                    let counselorId = null;
+                    let writerId = null;
+                    
+                    if (formData.counselorName) {
+                        try {
+                            const usersResponse = await apiRequest('/users');
+                            if (usersResponse.code === 200) {
+                                const counselor = usersResponse.data.find(u => u.realName === formData.counselorName && u.role === 'COUNSELOR');
+                                if (counselor) {
+                                    counselorId = counselor.id;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('获取顾问ID失败:', error);
+                        }
+                    }
+                    
+                    if (formData.writerName) {
+                        try {
+                            const usersResponse = await apiRequest('/users');
+                            if (usersResponse.code === 200) {
+                                const writer = usersResponse.data.find(u => u.realName === formData.writerName && u.role === 'WRITER');
+                                if (writer) {
+                                    writerId = writer.id;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('获取文案ID失败:', error);
+                        }
+                    }
+                    
+                    const studentData = {
+                        name: formData.name,
+                        studentSource: formData.studentSource,
+                        status: formData.status,
+                        gender: formData.gender,
+                        birthDate: formData.birthDate,
+                        nationality: formData.nationality,
+                        idCard: formData.idCard,
+                        address: formData.address,
+                        phone: formData.phone,
+                        email: formData.email,
+                        wechat: formData.wechat,
+                        currentSchool: formData.currentSchool,
+                        enrollmentDate: formData.enrollmentDate,
+                        channelSource: formData.channelSource,
+                        contractDate: formData.contractDate,
+                        contractAmount: formData.contractAmount,
+                        major: formData.major,
+                        gpa: formData.gpa,
+                        toeflScore: formData.toeflScore,
+                        ieltsScore: formData.ieltsScore,
+                        greScore: formData.greScore,
+                        gmatScore: formData.gmatScore,
+                        awards: formData.awards,
+                        experiences: formData.experiences,
+                        notes: formData.notes,
+                        counselorId: counselorId,
+                        writerId: writerId
+                    };
+                    
+                    const data = await apiRequest('/students', {
+                        method: 'POST',
+                        body: JSON.stringify(studentData)
+                    });
+                    
+                    if (data.code === 200) {
+                        showMessage('学生信息创建成功', 'success');
+                        closeModal();
+                        loadStudents();
+                    } else {
+                        showMessage('创建失败: ' + data.message, 'error');
+                    }
+                }
+            } catch (error) {
+                showMessage('操作失败: ' + error.message, 'error');
+            }
+        });
+
+        // 加载咨询顾问和文案选项
+        async function loadCounselorsAndWriters() {
+            try {
+                const data = await apiRequest('/users');
+                if (data.code === 200) {
+                    const counselors = data.data.filter(user => user.role === 'COUNSELOR');
+                    const writers = data.data.filter(user => user.role === 'WRITER');
+                    
+                    // 填充咨询顾问选项
+                    const counselorSelect = document.getElementById('counselorName');
+                    counselorSelect.innerHTML = '<option value="">请选择咨询顾问</option>';
+                    counselors.forEach(counselor => {
+                        const option = document.createElement('option');
+                        option.value = counselor.realName;
+                        option.textContent = counselor.realName;
+                        counselorSelect.appendChild(option);
+                    });
+                    
+                    // 填充文案选项
+                    const writerSelect = document.getElementById('writerName');
+                    writerSelect.innerHTML = '<option value="">请选择文案</option>';
+                    writers.forEach(writer => {
+                        const option = document.createElement('option');
+                        option.value = writer.realName;
+                        option.textContent = writer.realName;
+                        writerSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('加载咨询顾问和文案选项失败:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 加载学生数据
+            loadStudents();
+            loadCounselorsAndWriters();
+        });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('studentModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
+

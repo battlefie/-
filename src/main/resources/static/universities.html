@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大学信息 - 留学客户管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body style="background: #f5f5f5;">
+    <nav>
+        <div class="nav-content">
+            <div class="logo">🎓 留学客户管理系统</div>
+            <ul class="nav-links">
+                <li><a href="/dashboard.html">仪表盘</a></li>
+                <li><a href="/students.html">学生管理</a></li>
+                <li><a href="/universities.html">大学信息</a></li>
+                <li><a href="/applications.html">申请管理</a></li>
+                <li><a href="/register.html" id="register-nav-link" style="display: none;">注册新用户</a></li>
+                <li><a href="#" onclick="showAdvancedSearch()" style="color: #667eea; font-weight: bold;">🔍 高级搜索</a></li>
+                <li><a href="#" onclick="logout()">退出登录</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h1>大学信息</h1>
+                    <button class="btn btn-small" onclick="showAddModal()">+ 添加大学</button>
+                </div>
+            </div>
+
+            <div class="card" style="max-width: none;">
+                <div id="universitiesTable">
+                    <p style="text-align: center; color: #999;">加载中...</p>
+                </div>
+                <div id="pagination" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    <!-- 分页控件将在这里动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑大学模态框 -->
+    <div id="universityModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">添加大学</h2>
+            <form id="universityForm">
+                <input type="hidden" id="universityId">
+                <div class="form-group">
+                    <label for="name">大学名称 *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="country">国家 *</label>
+                    <input type="text" id="country" name="country" required>
+                </div>
+                <div class="form-group">
+                    <label for="city">城市</label>
+                    <input type="text" id="city" name="city">
+                </div>
+                
+                <h4 style="margin: 20px 0 10px 0; color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 5px;">大学排名</h4>
+                <div class="form-group">
+                    <label for="shanghaiRanking">软科排名</label>
+                    <input type="number" id="shanghaiRanking" name="shanghaiRanking" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="timesRanking">泰晤士排名</label>
+                    <input type="number" id="timesRanking" name="timesRanking" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="qsRanking">QS排名</label>
+                    <input type="number" id="qsRanking" name="qsRanking" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="usNewsRanking">US News排名</label>
+                    <input type="number" id="usNewsRanking" name="usNewsRanking" min="1">
+                </div>
+                
+                <h4 style="margin: 20px 0 10px 0; color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 5px;">费用与要求</h4>
+                <div class="form-group">
+                    <label for="tuitionFee">学费（美元）</label>
+                    <input type="number" id="tuitionFee" name="tuitionFee" step="0.01" placeholder="例如: 50000">
+                </div>
+                <div class="form-group">
+                    <label for="languageRequirement">语言要求</label>
+                    <textarea id="languageRequirement" name="languageRequirement" rows="3" placeholder="例如: TOEFL 100+, IELTS 7.0"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="gpaRequirement">GPA要求</label>
+                    <input type="number" id="gpaRequirement" name="gpaRequirement" step="0.01" min="0" max="4" placeholder="例如: 3.5">
+                </div>
+                <div class="form-group">
+                    <label for="applicationDeadline">申请截止日期</label>
+                    <input type="date" id="applicationDeadline" name="applicationDeadline">
+                </div>
+                
+                <h4 style="margin: 20px 0 10px 0; color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 5px;">其他信息</h4>
+                <div class="form-group">
+                    <label for="website">官网链接</label>
+                    <input type="url" id="website" name="website" placeholder="https://">
+                </div>
+                <div class="form-group">
+                    <label for="description">简介</label>
+                    <textarea id="description" name="description" rows="5"></textarea>
+                </div>
+                <button type="submit" class="btn">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 查看大学详情模态框 -->
+    <div id="viewUniversityModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeViewModal()">&times;</span>
+            <h2>大学详情</h2>
+            
+            <div id="viewUniversityContent">
+                <!-- 大学信息将在这里显示 -->
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="closeViewModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/roleManager.js"></script>
+    <script>
+        let universities = [];
+        let paginationData = {
+            currentPage: 0,
+            totalPages: 1,
+            totalElements: 0
+        };
+
+        async function loadUniversities(page = 0, size = 9) {
+            try {
+                // 根据用户角色控制页面元素显示
+                setupRoleBasedUI();
+                
+                console.log('开始加载大学数据，页码:', page);
+                const data = await apiRequest(`/universities?page=${page}&size=${size}`);
+                console.log('大学数据API响应:', data);
+                
+                if (data.code === 200) {
+                    // 检查是否是分页数据
+                    if (data.data.content) {
+                        // 分页数据
+                        universities = data.data.content;
+                        paginationData = {
+                            currentPage: data.data.number,
+                            totalPages: data.data.totalPages,
+                            totalElements: data.data.totalElements
+                        };
+                    } else {
+                        // 普通列表数据
+                        universities = data.data;
+                        paginationData = {
+                            currentPage: 0,
+                            totalPages: 1,
+                            totalElements: universities.length
+                        };
+                    }
+                    
+                    console.log('获取到', universities.length, '条大学记录');
+                    displayUniversities(universities);
+                    displayPagination();
+                } else {
+                    console.error('大学数据获取失败:', data);
+                    document.getElementById('universitiesTable').innerHTML = 
+                        `<div style="color: red; text-align: center; padding: 20px;">加载失败: ${data.message}</div>`;
+                }
+            } catch (error) {
+                console.error('加载大学数据失败:', error);
+                document.getElementById('universitiesTable').innerHTML = 
+                    `<div style="color: red; text-align: center; padding: 20px;">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        // 根据用户角色设置UI元素
+        function setupRoleBasedUI() {
+            // 检查是否有大学管理权限（管理员、咨询顾问和文案）
+            const canManage = roleManager && roleManager.hasPermission('university_management');
+            
+            // 控制添加大学按钮的显示
+            const addButton = document.querySelector('button[onclick="showAddModal()"]');
+            if (addButton) {
+                addButton.style.display = canManage ? 'block' : 'none';
+            }
+        }
+
+        function displayUniversities(universities) {
+            const container = document.getElementById('universitiesTable');
+            
+            if (universities.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999;">暂无大学数据</p>';
+                return;
+            }
+            
+            // 检查是否有编辑权限
+            const canEdit = roleManager && roleManager.hasPermission('university_management');
+            
+            let html = '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">';
+            
+            universities.forEach(uni => {
+                html += `
+                <div class="university-card" style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;" 
+                     onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" 
+                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+                    <div style="border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #667eea; font-size: 18px;">${uni.name || 'N/A'}</h3>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                            <span style="background: #667eea; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px;">${uni.country || 'N/A'}</span>
+                            <span style="color: #666; font-size: 13px;">${uni.city || 'N/A'}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #666; font-size: 13px;">QS排名:</span>
+                            <strong style="color: #333;">${uni.qsRanking ? '#' + uni.qsRanking : 'N/A'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #666; font-size: 13px;">US News排名:</span>
+                            <strong style="color: #333;">${uni.usNewsRanking ? '#' + uni.usNewsRanking : 'N/A'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #666; font-size: 13px;">软科排名:</span>
+                            <strong style="color: #333;">${uni.shanghaiRanking ? '#' + uni.shanghaiRanking : 'N/A'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #666; font-size: 13px;">泰晤士排名:</span>
+                            <strong style="color: #333;">${uni.timesRanking ? '#' + uni.timesRanking : 'N/A'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #666; font-size: 13px;">学费:</span>
+                            <strong style="color: #e74c3c;">${uni.tuitionFee ? '$' + Number(uni.tuitionFee).toLocaleString() : 'N/A'}</strong>
+                        </div>
+                        ${uni.applicationDeadline ? `
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #666; font-size: 13px;">申请截止:</span>
+                            <strong style="color: #333;">${uni.applicationDeadline}</strong>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                        <button class="btn btn-small btn-info" onclick="viewUniversity(${uni.id})" style="flex: 1;">查看</button>`;
+                
+                // 只有管理员才能看到编辑和删除按钮
+                if (canEdit) {
+                    html += `
+                        <button class="btn btn-small" onclick="editUniversity(${uni.id})" style="flex: 1;">编辑</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteUniversity(${uni.id})" style="flex: 1;">删除</button>`;
+                }
+                
+                html += `
+                    </div>
+                </div>`;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function displayPagination() {
+            const paginationDiv = document.getElementById('pagination');
+            
+            console.log('分页数据:', paginationData);
+            
+            // 总是显示分页信息，即使只有一页
+            let html = '';
+            
+            // 只有当有多页时才显示翻页按钮
+            if (paginationData.totalPages > 1) {
+                // 首页按钮
+                if (paginationData.currentPage > 0) {
+                    html += `<button class="btn btn-small" onclick="loadUniversities(0)">首页</button>`;
+                    html += `<button class="btn btn-small" onclick="loadUniversities(${paginationData.currentPage - 1})">上一页</button>`;
+                }
+                
+                // 尾页按钮
+                if (paginationData.currentPage < paginationData.totalPages - 1) {
+                    html += `<button class="btn btn-small" onclick="loadUniversities(${paginationData.currentPage + 1})">下一页</button>`;
+                    html += `<button class="btn btn-small" onclick="loadUniversities(${paginationData.totalPages - 1})">尾页</button>`;
+                }
+                
+                // 添加跳转功能
+                html += `<span style="margin-left: 20px;">
+                    <input type="number" id="pageJumpInput" min="1" max="${paginationData.totalPages}" 
+                           value="${paginationData.currentPage + 1}" 
+                           style="width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; margin: 0 5px;"
+                           onkeypress="if(event.key === 'Enter') jumpToPage()">
+                    <button class="btn btn-small" onclick="jumpToPage()">跳转</button>
+                </span>`;
+            }
+            
+            // 显示统计信息（总是显示）
+            html += `<span style="margin-left: 20px; color: #666;">共 ${paginationData.totalElements} 条记录，第 ${paginationData.currentPage + 1}/${paginationData.totalPages} 页</span>`;
+            
+            paginationDiv.innerHTML = html;
+        }
+        
+        function jumpToPage() {
+            const input = document.getElementById('pageJumpInput');
+            if (!input) return;
+            
+            const pageNumber = parseInt(input.value);
+            const totalPages = paginationData.totalPages;
+            
+            if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > totalPages) {
+                alert(`请输入1到${totalPages}之间的页数！`);
+                input.value = paginationData.currentPage + 1;
+                return;
+            }
+            
+            loadUniversities(pageNumber - 1);
+        }
+
+        function showAddModal() {
+            document.getElementById('modalTitle').textContent = '添加大学';
+            document.getElementById('universityForm').reset();
+            document.getElementById('universityId').value = '';
+            document.getElementById('universityModal').style.display = 'block';
+        }
+
+        function editUniversity(id) {
+            const uni = universities.find(u => u.id === id);
+            if (!uni) return;
+            
+            document.getElementById('modalTitle').textContent = '编辑大学';
+            document.getElementById('universityId').value = uni.id;
+            document.getElementById('name').value = uni.name;
+            document.getElementById('country').value = uni.country;
+            document.getElementById('city').value = uni.city || '';
+            document.getElementById('shanghaiRanking').value = uni.shanghaiRanking || '';
+            document.getElementById('timesRanking').value = uni.timesRanking || '';
+            document.getElementById('qsRanking').value = uni.qsRanking || '';
+            document.getElementById('usNewsRanking').value = uni.usNewsRanking || '';
+            document.getElementById('tuitionFee').value = uni.tuitionFee || '';
+            document.getElementById('languageRequirement').value = uni.languageRequirement || '';
+            document.getElementById('gpaRequirement').value = uni.gpaRequirement || '';
+            document.getElementById('applicationDeadline').value = uni.applicationDeadline || '';
+            document.getElementById('website').value = uni.website || '';
+            document.getElementById('description').value = uni.description || '';
+            
+            document.getElementById('universityModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('universityModal').style.display = 'none';
+        }
+
+        // 查看大学详情
+        function viewUniversity(id) {
+            const uni = universities.find(u => u.id === id);
+            if (!uni) return;
+            
+            // 构建显示内容 - 基本信息
+            let content = `
+                <div class="info-section">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">基本信息</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>大学名称:</label>
+                            <span>${uni.name || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>国家:</label>
+                            <span>${uni.country || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>城市:</label>
+                            <span>${uni.city || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>官网链接:</label>
+                            <span>${uni.website ? `<a href="${uni.website}" target="_blank" style="color: #667eea;">访问官网</a>` : 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 大学排名
+            content += `
+                <div class="info-section">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">大学排名</h3>
+                    <div class="info-grid">
+            `;
+            
+            if (uni.shanghaiRanking) {
+                content += `
+                    <div class="info-item">
+                        <label>软科排名:</label>
+                        <span>#${uni.shanghaiRanking}</span>
+                    </div>
+                `;
+            }
+            
+            if (uni.timesRanking) {
+                content += `
+                    <div class="info-item">
+                        <label>泰晤士排名:</label>
+                        <span>#${uni.timesRanking}</span>
+                    </div>
+                `;
+            }
+            
+            if (uni.qsRanking) {
+                content += `
+                    <div class="info-item">
+                        <label>QS排名:</label>
+                        <span>#${uni.qsRanking}</span>
+                    </div>
+                `;
+            }
+            
+            if (uni.usNewsRanking) {
+                content += `
+                    <div class="info-item">
+                        <label>US News排名:</label>
+                        <span>#${uni.usNewsRanking}</span>
+                    </div>
+                `;
+            }
+            
+            content += `
+                    </div>
+                </div>
+            `;
+            
+            // 申请要求
+            if (uni.tuitionFee || uni.languageRequirement || uni.gpaRequirement || uni.applicationDeadline) {
+                content += `
+                    <div class="info-section">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">申请要求</h3>
+                        <div class="info-grid">
+                `;
+                
+                if (uni.tuitionFee) {
+                    content += `
+                        <div class="info-item">
+                            <label>学费（美元）:</label>
+                            <span>$${Number(uni.tuitionFee).toLocaleString()}</span>
+                        </div>
+                    `;
+                }
+                
+                if (uni.languageRequirement) {
+                    content += `
+                        <div class="info-item">
+                            <label>语言要求:</label>
+                            <span>${uni.languageRequirement}</span>
+                        </div>
+                    `;
+                }
+                
+                if (uni.gpaRequirement) {
+                    content += `
+                        <div class="info-item">
+                            <label>GPA要求:</label>
+                            <span>${uni.gpaRequirement}</span>
+                        </div>
+                    `;
+                }
+                
+                if (uni.applicationDeadline) {
+                    content += `
+                        <div class="info-item">
+                            <label>申请截止日期:</label>
+                            <span>${uni.applicationDeadline}</span>
+                        </div>
+                    `;
+                }
+                
+                content += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 添加简介
+            if (uni.description) {
+                content += `
+                    <div class="info-section">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">大学简介</h3>
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; line-height: 1.6;">
+                            <span>${uni.description}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 设置内容和样式
+            document.getElementById('viewUniversityContent').innerHTML = content;
+            document.getElementById('viewUniversityModal').style.display = 'block';
+            
+            // 保存当前查看的大学ID，用于编辑功能
+            window.currentViewingUniversityId = id;
+        }
+
+        // 关闭查看模态框
+        function closeViewModal() {
+            document.getElementById('viewUniversityModal').style.display = 'none';
+            window.currentViewingUniversityId = null;
+        }
+
+        // 显示消息提示
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-size: 14px;
+                z-index: 10000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            `;
+            
+            if (type === 'success') {
+                messageDiv.style.backgroundColor = '#4CAF50';
+            } else if (type === 'error') {
+                messageDiv.style.backgroundColor = '#f44336';
+            } else {
+                messageDiv.style.backgroundColor = '#2196F3';
+            }
+            
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+
+        async function deleteUniversity(id) {
+            if (!confirm('确定要删除这所大学吗？')) return;
+            
+            try {
+                const data = await apiRequest(`/universities/${id}`, { method: 'DELETE' });
+                if (data.code === 200) {
+                    showMessage('删除成功', 'success');
+                    loadUniversities();
+                } else if (data.code === 500 && data.message && data.message.includes('权限不足')) {
+                    // 权限不足，显示弹窗提示
+                    alert('权限不足！\n\n只有管理员可以删除大学信息。\n\n请联系系统管理员。');
+                } else {
+                    showMessage('删除失败: ' + (data.message || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showMessage('删除失败', 'error');
+            }
+        }
+
+        document.getElementById('universityForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            console.log('表单提交开始');
+            
+            const id = document.getElementById('universityId').value;
+            const formData = {
+                name: document.getElementById('name').value,
+                country: document.getElementById('country').value,
+                city: document.getElementById('city').value,
+                shanghaiRanking: document.getElementById('shanghaiRanking').value ? parseInt(document.getElementById('shanghaiRanking').value) : null,
+                timesRanking: document.getElementById('timesRanking').value ? parseInt(document.getElementById('timesRanking').value) : null,
+                qsRanking: document.getElementById('qsRanking').value ? parseInt(document.getElementById('qsRanking').value) : null,
+                usNewsRanking: document.getElementById('usNewsRanking').value ? parseInt(document.getElementById('usNewsRanking').value) : null,
+                tuitionFee: document.getElementById('tuitionFee').value ? parseFloat(document.getElementById('tuitionFee').value) : null,
+                languageRequirement: document.getElementById('languageRequirement').value,
+                gpaRequirement: document.getElementById('gpaRequirement').value ? parseFloat(document.getElementById('gpaRequirement').value) : null,
+                applicationDeadline: document.getElementById('applicationDeadline').value,
+                website: document.getElementById('website').value,
+                description: document.getElementById('description').value
+            };
+            
+            console.log('表单数据:', formData);
+            
+            try {
+                const url = id ? `/universities/${id}` : '/universities';
+                const method = id ? 'PUT' : 'POST';
+                
+                console.log('请求URL:', url, '方法:', method);
+                
+                const data = await apiRequest(url, {
+                    method: method,
+                    body: JSON.stringify(formData)
+                });
+                
+                console.log('API响应:', data);
+                
+                if (data.code === 200) {
+                    showMessage(id ? '更新成功' : '创建成功', 'success');
+                    closeModal();
+                    loadUniversities();
+                } else {
+                    showMessage('操作失败: ' + (data.message || '未知错误'), 'error');
+                    console.error('操作失败:', data);
+                }
+            } catch (error) {
+                console.error('表单提交错误:', error);
+                showMessage('操作失败: ' + error.message, 'error');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 检查用户是否已登录
+            if (!isAuthenticated()) {
+                window.location.href = '/login.html';
+                return;
+            }
+            loadUniversities();
+        });
+
+        window.onclick = function(event) {
+            const universityModal = document.getElementById('universityModal');
+            const viewModal = document.getElementById('viewUniversityModal');
+            
+            if (event.target == universityModal) {
+                closeModal();
+            } else if (event.target == viewModal) {
+                closeViewModal();
+            }
+        }
+
+        function showAdvancedSearch() {
+            window.location.href = '/advanced-search.html';
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>申请管理 - 留学客户管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body style="background: #f5f5f5;">
+    <nav>
+        <div class="nav-content">
+            <div class="logo">🎓 留学客户管理系统</div>
+            <ul class="nav-links">
+                <li><a href="/dashboard.html">仪表盘</a></li>
+                <li><a href="/students.html">学生管理</a></li>
+                <li><a href="/universities.html">大学信息</a></li>
+                <li><a href="/applications.html">申请管理</a></li>
+                <li><a href="/register.html" id="register-nav-link" style="display: none;">注册新用户</a></li>
+                <li><a href="#" onclick="showAdvancedSearch()" style="color: #667eea; font-weight: bold;">🔍 高级搜索</a></li>
+                <li><a href="#" onclick="logout()">退出登录</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1 id="pageTitle">申请管理</h1>
+                    <button class="btn btn-small" id="createApplicationBtn" onclick="showAddModal()" style="display: none;">+ 创建申请</button>
+                </div>
+            </div>
+
+            <!-- 学生角色权限提示 -->
+            <div id="studentPermissionDenied" class="card" style="max-width: none; display: none;">
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 64px; color: #dc3545; margin-bottom: 20px;">🚫</div>
+                    <h2 style="color: #dc3545; margin-bottom: 15px;">权限不足</h2>
+                    <p style="color: #6c757d; font-size: 16px; margin-bottom: 30px;">
+                        学生用户无法访问申请管理功能。<br>
+                        如需创建或查看申请，请联系管理员或咨询顾问。
+                    </p>
+                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn" onclick="window.location.href='/dashboard.html'">返回仪表盘</button>
+                        <button class="btn" onclick="window.location.href='/students.html'">查看我的资料</button>
+                        <button class="btn" onclick="window.location.href='/universities.html'">查看大学信息</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 管理员和咨询顾问的申请管理界面 -->
+            <div id="adminApplicationManagement" class="card" style="max-width: none;">
+                <div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label for="statusFilter" style="white-space: nowrap;">状态筛选：</label>
+                        <select id="statusFilter" onchange="filterApplications()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                            <option value="">全部</option>
+                            <option value="DRAFT">草稿</option>
+                            <option value="SUBMITTED">已提交</option>
+                            <option value="UNDER_REVIEW">审核中</option>
+                            <option value="ACCEPTED">已录取</option>
+                            <option value="REJECTED">已拒绝</option>
+                            <option value="WAITLISTED">候补</option>
+                            <option value="WITHDRAWN">已撤回</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 250px;">
+                        <label for="searchStudent" style="white-space: nowrap;">搜索学生：</label>
+                        <input type="text" id="searchStudent" placeholder="输入学生姓名搜索..." 
+                               style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;" 
+                               onkeyup="searchApplications(this.value)">
+                        <button onclick="clearSearch()" style="padding: 8px 15px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">清空</button>
+                    </div>
+                </div>
+                
+                <div id="applicationsTable">
+                    <p style="text-align: center; color: #999;">加载中...</p>
+                </div>
+                <div id="pagination" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    <!-- 分页控件将在这里动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑申请模态框 -->
+    <div id="applicationModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">创建申请</h2>
+            
+            <!-- 申请流程指导 -->
+            <div id="applicationGuide" class="application-guide" style="display: none;">
+                <div class="guide-header">
+                    <h3>📝 申请流程指导</h3>
+                    <p>请按照以下步骤完成您的留学申请</p>
+                </div>
+                <div class="guide-steps">
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <span class="step-text">选择您要申请的大学和专业</span>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <span class="step-text">确认学位类型和申请学期</span>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <span class="step-text">填写申请日期和备注信息</span>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="applicationForm">
+                <input type="hidden" id="applicationId">
+                
+                <!-- 申请人信息（仅管理员可见） -->
+                <div class="form-group" id="studentIdGroup">
+                    <label for="studentId">申请人 *</label>
+                    <select id="studentId" name="studentId" required>
+                        <option value="">请选择申请人</option>
+                    </select>
+                </div>
+                
+                <!-- 申请基本信息 -->
+                <div class="form-section">
+                    <h4 class="section-title">🎓 申请基本信息</h4>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="universityId">申请学校 *</label>
+                            <select id="universityId" name="universityId" required>
+                                <option value="">请选择申请学校</option>
+                            </select>
+                            <small class="form-help">请选择您要申请的大学</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="major">申请专业 *</label>
+                            <input type="text" id="major" name="major" required placeholder="例如: 计算机科学">
+                            <small class="form-help">请输入您要申请的专业名称</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="degreeType">学位类型 *</label>
+                            <select id="degreeType" name="degreeType" required>
+                                <option value="">请选择</option>
+                                <option value="JUNIOR_HIGH">初中</option>
+                                <option value="HIGH_SCHOOL">高中</option>
+                                <option value="BACHELOR">本科</option>
+                                <option value="MASTER">硕士</option>
+                                <option value="PHD">博士</option>
+                            </select>
+                            <small class="form-help">选择您要申请的学位类型</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="country">申请国家</label>
+                            <input type="text" id="country" name="country" placeholder="例如: 美国">
+                            <small class="form-help">申请学校所在国家</small>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="statusUrl">申请状态链接</label>
+                        <input type="url" id="statusUrl" name="statusUrl" placeholder="https://...">
+                        <small class="form-help">申请状态查询链接</small>
+                    </div>
+                </div>
+                
+                <!-- 签证信息 -->
+                <div class="form-section">
+                    <h4 class="section-title">🛂 签证信息</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="visaSubmissionDate">递交签证日期</label>
+                            <input type="date" id="visaSubmissionDate" name="visaSubmissionDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="interviewDate">面试日期</label>
+                            <input type="date" id="interviewDate" name="interviewDate">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="medicalExamDate">体检日期</label>
+                            <input type="date" id="medicalExamDate" name="medicalExamDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="visaApprovedDate">获签日期</label>
+                            <input type="date" id="visaApprovedDate" name="visaApprovedDate">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="visaRejectedDate">拒签日期</label>
+                            <input type="date" id="visaRejectedDate" name="visaRejectedDate">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 后续跟踪 -->
+                <div class="form-section">
+                    <h4 class="section-title">📋 后续跟踪</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="departureDate">出发日期</label>
+                            <input type="date" id="departureDate" name="departureDate">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="airportPickupAccommodation">接机住宿</label>
+                        <textarea id="airportPickupAccommodation" name="airportPickupAccommodation" rows="3" placeholder="接机和住宿安排信息"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="followUpStatus">回访情况</label>
+                        <textarea id="followUpStatus" name="followUpStatus" rows="3" placeholder="回访情况记录"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="arrivalStatus">抵达后情况</label>
+                        <textarea id="arrivalStatus" name="arrivalStatus" rows="3" placeholder="抵达后的情况记录"></textarea>
+                    </div>
+                </div>
+                
+                
+                <!-- 申请状态（仅管理员可见） -->
+                <div class="form-section" id="statusSection">
+                    <h4 class="section-title">📊 申请状态</h4>
+                    <div class="form-group">
+                        <label for="status">申请状态 *</label>
+                        <select id="status" name="status" required>
+                            <option value="DRAFT">草稿</option>
+                            <option value="SUBMITTED">已提交</option>
+                            <option value="UNDER_REVIEW">审核中</option>
+                            <option value="ACCEPTED">已录取</option>
+                            <option value="REJECTED">已拒绝</option>
+                            <option value="WAITLISTED">候补</option>
+                            <option value="WITHDRAWN">已撤回</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 申请时间 -->
+                <div class="form-section">
+                    <h4 class="section-title">📅 申请时间</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="applicationDate">申请提交日期</label>
+                            <input type="date" id="applicationDate" name="applicationDate">
+                            <small class="form-help">您提交申请的日期</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="decisionDate">结果通知日期</label>
+                            <input type="date" id="decisionDate" name="decisionDate">
+                            <small class="form-help">学校通知申请结果的日期</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 咨询顾问和文案（仅管理员可见） -->
+                <div class="form-section" id="counselorSection">
+                    <h4 class="section-title">👨‍💼 咨询顾问和文案</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="counselorId">负责咨询顾问</label>
+                            <select id="counselorId" name="counselorId">
+                                <option value="">请选择咨询顾问</option>
+                            </select>
+                            <small class="form-help">选择负责您申请的咨询顾问</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="writerId">负责文案</label>
+                            <select id="writerId" name="writerId">
+                                <option value="">请选择文案</option>
+                            </select>
+                            <small class="form-help">选择负责您申请的文案</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 备注信息 -->
+                <div class="form-section">
+                    <h4 class="section-title">📝 备注信息</h4>
+                    <div class="form-group">
+                        <label for="notes">个人备注</label>
+                        <textarea id="notes" name="notes" placeholder="您可以在这里记录申请过程中的重要信息，比如：&#10;- 申请的特殊要求&#10;- 个人优势说明&#10;- 申请时间安排&#10;- 其他重要信息" rows="4"></textarea>
+                        <small class="form-help">记录申请过程中的重要信息</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="feedback">学校反馈</label>
+                        <textarea id="feedback" name="feedback" placeholder="记录学校的反馈信息，如：&#10;- 面试安排&#10;- 补充材料要求&#10;- 录取条件&#10;- 其他通知" rows="4"></textarea>
+                        <small class="form-help">记录学校的反馈和通知信息</small>
+                    </div>
+                </div>
+                
+                <!-- 表单按钮 -->
+                <div class="form-actions">
+                    <button type="button" class="form-button form-button-cancel" onclick="closeModal()">取消</button>
+                    <button type="submit" class="form-button form-button-submit" id="submitBtn">
+                        <span id="submitText">保存申请</span>
+                        <span id="submitLoading" style="display: none;">保存中...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 查看申请详情模态框 -->
+    <div id="viewApplicationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeViewModal()">&times;</span>
+            <h2>申请详情</h2>
+            
+            <div id="viewApplicationContent">
+                <!-- 申请信息将在这里显示 -->
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="closeViewModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* 申请表单样式 */
+        .application-guide {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .guide-header h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        
+        .guide-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .guide-steps {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .step-number {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .step-text {
+            font-size: 14px;
+        }
+        
+        .form-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section-title {
+            color: #667eea;
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-help {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 120px;
+            min-width: 120px;
+            max-width: 120px;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            position: relative;
+            width: 120px;
+            min-width: 120px;
+            max-width: 120px;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        
+        .btn-primary:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+        
+        /* 专用按钮样式 - 确保大小一致 */
+        .form-button {
+            width: 120px !important;
+            min-width: 120px !important;
+            max-width: 120px !important;
+            padding: 10px 20px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            font-size: 14px !important;
+            border: none !important;
+        }
+        
+        .form-button-cancel {
+            background: #6c757d !important;
+            color: white !important;
+        }
+        
+        .form-button-cancel:hover {
+            background: #5a6268 !important;
+        }
+        
+        .form-button-submit {
+            background: #667eea !important;
+            color: white !important;
+        }
+        
+        .form-button-submit:hover {
+            background: #5a67d8 !important;
+        }
+        
+        .form-button:disabled {
+            background: #cbd5e0 !important;
+            cursor: not-allowed !important;
+        }
+        
+        .field-error {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+        }
+        
+        .field-error-message {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #dc3545;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .guide-steps {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/roleManager.js"></script>
+    <script>
+        let applications = [];
+        let students = [];
+        let universities = [];
+        let counselors = [];
+        let paginationData = {
+            currentPage: 0,
+            totalPages: 1,
+            totalElements: 0
+        };
+        const statusMap = {
+            'DRAFT': '草稿',
+            'SUBMITTED': '已提交',
+            'UNDER_REVIEW': '审核中',
+            'ACCEPTED': '已录取',
+            'REJECTED': '已拒绝',
+            'WAITLISTED': '候补',
+            'WITHDRAWN': '已撤回'
+        };
+
+        // 检查学生信息是否完整
+        function checkStudentInfoCompleteness(student) {
+            if (!student) return false;
+            
+            // 检查基本信息是否填写
+            const requiredFields = [
+                'gender', 'nationality', 'birthDate', 'idCard', 
+                'address', 'highSchool', 'university', 'major'
+            ];
+            
+            for (const field of requiredFields) {
+                const value = student[field];
+                if (!value || value === '' || value === null) {
+                    console.log(`学生信息不完整，缺少字段: ${field}, 值: ${value}`);
+                    return false;
+                }
+            }
+            
+            // 检查至少有一个考试成绩
+            const hasTestScore = student.toeflScore || student.ieltsScore || 
+                                student.greScore || student.gmatScore;
+            
+            if (!hasTestScore) {
+                console.log('学生信息不完整，缺少考试成绩');
+                return false;
+            }
+            
+            return true;
+        }
+
+        async function loadApplications(page = 0, size = 10) {
+            try {
+                // 所有角色都可以看到所有申请
+                showAdminApplicationManagement();
+                const data = await apiRequest(`/applications?page=${page}&size=${size}`);
+                if (data.code === 200) {
+                    // 检查是否是分页数据
+                    if (data.data.content) {
+                        // 分页数据
+                        applications = data.data.content;
+                        paginationData = {
+                            currentPage: data.data.number,
+                            totalPages: data.data.totalPages,
+                            totalElements: data.data.totalElements
+                        };
+                    } else {
+                        // 普通列表数据
+                        applications = data.data;
+                        paginationData = {
+                            currentPage: 0,
+                            totalPages: 1,
+                            totalElements: applications.length
+                        };
+                    }
+                    displayApplications(applications);
+                    displayPagination();
+                } else {
+                    showMessage('加载申请失败', 'error');
+                }
+            } catch (error) {
+                console.error('加载申请数据失败:', error);
+                showMessage('加载申请失败', 'error');
+            }
+        }
+
+        // 显示学生权限不足提示
+        function showStudentPermissionDenied() {
+            document.getElementById('studentPermissionDenied').style.display = 'block';
+            document.getElementById('adminApplicationManagement').style.display = 'none';
+            document.getElementById('createApplicationBtn').style.display = 'none';
+            document.getElementById('pageTitle').textContent = '申请管理 - 权限不足';
+        }
+
+        // 显示管理员申请管理界面
+        function showAdminApplicationManagement() {
+            document.getElementById('studentPermissionDenied').style.display = 'none';
+            document.getElementById('adminApplicationManagement').style.display = 'block';
+            document.getElementById('createApplicationBtn').style.display = 'inline-block';
+            document.getElementById('pageTitle').textContent = '申请管理';
+        }
+
+        // 加载当前学生的申请
+        async function loadCurrentStudentApplications() {
+            try {
+                // 获取当前用户信息
+                const userResponse = await apiRequest('/users/me');
+                if (userResponse.code !== 200) {
+                    console.error('获取用户信息失败:', userResponse.message);
+                    showMessage('无法获取用户信息', 'error');
+                    return;
+                }
+
+                const user = userResponse.data;
+                console.log('当前用户:', user);
+
+                // 获取学生信息
+                const studentResponse = await apiRequest(`/students/user/${user.id}`);
+                if (studentResponse.code !== 200 || !studentResponse.data) {
+                    console.error('获取学生信息失败:', studentResponse.message);
+                    showMessage('请先完善您的学生信息', 'warning');
+                    return;
+                }
+
+                const student = studentResponse.data;
+                console.log('当前学生:', student);
+
+                // 获取该学生的所有申请
+                const applicationsResponse = await apiRequest(`/applications?studentId=${student.id}`);
+                if (applicationsResponse.code === 200) {
+                    applications = applicationsResponse.data;
+                    displayApplications(applications);
+                } else {
+                    console.error('获取申请数据失败:', applicationsResponse.message);
+                    showMessage('无法加载申请数据', 'error');
+                }
+            } catch (error) {
+                console.error('加载学生申请失败:', error);
+                showMessage('加载申请数据失败，请检查网络连接', 'error');
+            }
+        }
+
+        async function loadStudents() {
+            try {
+                const data = await apiRequest('/students?page=0&size=1000');
+                if (data.code === 200) {
+                    // 处理分页数据
+                    if (data.data.content) {
+                        students = data.data.content;
+                    } else {
+                        students = data.data;
+                    }
+                    populateStudentSelect();
+                }
+            } catch (error) {
+                console.error('加载学生数据失败:', error);
+            }
+        }
+
+        async function loadUniversities() {
+            try {
+                const data = await apiRequest('/universities');
+                if (data.code === 200) {
+                    universities = data.data;
+                    populateUniversitySelect();
+                }
+            } catch (error) {
+                console.error('加载大学数据失败:', error);
+            }
+        }
+
+        async function loadCounselors() {
+            try {
+                const data = await apiRequest('/users');
+                if (data.code === 200) {
+                    // 过滤出咨询顾问角色的用户
+                    counselors = data.data.filter(user => user.role === 'COUNSELOR');
+                    populateCounselorSelect();
+                    // 同时加载文案
+                    loadWriters();
+                }
+            } catch (error) {
+                console.error('加载咨询顾问数据失败:', error);
+            }
+        }
+
+        async function loadWriters() {
+            try {
+                const data = await apiRequest('/users');
+                if (data.code === 200) {
+                    // 过滤出文案角色的用户
+                    const writersData = data.data.filter(user => user.role === 'WRITER');
+                    populateWriterSelect(writersData);
+                }
+            } catch (error) {
+                console.error('加载文案数据失败:', error);
+            }
+        }
+
+        function populateStudentSelect() {
+            const select = document.getElementById('studentId');
+            select.innerHTML = '<option value="">请选择申请人</option>';
+            
+            students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = `${student.name || 'N/A'}`;
+                select.appendChild(option);
+            });
+        }
+
+        function populateUniversitySelect() {
+            const select = document.getElementById('universityId');
+            select.innerHTML = '<option value="">请选择申请学校</option>';
+            
+            universities.forEach(university => {
+                const option = document.createElement('option');
+                option.value = university.id;
+                option.textContent = `${university.name} (${university.country})`;
+                select.appendChild(option);
+            });
+        }
+
+        function populateCounselorSelect() {
+            const select = document.getElementById('counselorId');
+            select.innerHTML = '<option value="">请选择咨询顾问</option>';
+            
+            counselors.forEach(counselor => {
+                const option = document.createElement('option');
+                option.value = counselor.id;
+                option.textContent = `${counselor.realName} (${counselor.username})`;
+                select.appendChild(option);
+            });
+        }
+
+        function populateWriterSelect(writers) {
+            const select = document.getElementById('writerId');
+            select.innerHTML = '<option value="">请选择文案</option>';
+            
+            writers.forEach(writer => {
+                const option = document.createElement('option');
+                option.value = writer.id;
+                option.textContent = `${writer.realName} (${writer.username})`;
+                select.appendChild(option);
+            });
+        }
+
+        function filterApplications() {
+            const status = document.getElementById('statusFilter').value;
+            const searchValue = document.getElementById('searchStudent').value.trim();
+            
+            let filtered = applications;
+            
+            // 按状态筛选
+            if (status) {
+                filtered = filtered.filter(app => app.status === status);
+            }
+            
+            // 按学生姓名搜索
+            if (searchValue) {
+                filtered = filtered.filter(app => 
+                    app.student && app.student.name && 
+                    app.student.name.toLowerCase().includes(searchValue.toLowerCase())
+                );
+            }
+            
+            // 更新分页信息为筛选后的结果
+            paginationData.currentPage = 0;
+            paginationData.totalPages = 1;
+            paginationData.totalElements = filtered.length;
+            
+            displayApplications(filtered);
+            displayPagination();
+        }
+
+        function searchApplications(searchValue) {
+            filterApplications();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchStudent').value = '';
+            filterApplications();
+        }
+
+        function displayApplications(applications) {
+            const container = document.getElementById('applicationsTable');
+            
+            if (applications.length === 0) {
+                if (roleManager && roleManager.isStudent()) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <h3>还没有申请记录</h3>
+                            <p>您可以开始创建您的留学申请。</p>
+                            <button class="btn" onclick="showAddModal()">创建申请</button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<p style="text-align: center; color: #999;">暂无申请数据</p>';
+                }
+                return;
+            }
+            
+            // 根据角色决定是否显示学生列
+            const isStudent = roleManager && roleManager.isStudent();
+            let html = '<table><thead><tr>';
+            if (!isStudent) {
+                html += '<th>学生</th>';
+            }
+            html += '<th>大学</th><th>专业</th><th>学位</th><th>状态</th><th>申请日期</th><th>操作</th></tr></thead><tbody>';
+            
+            applications.forEach(app => {
+                const degreeMap = {
+                    'JUNIOR_HIGH': '初中', 
+                    'HIGH_SCHOOL': '高中', 
+                    'BACHELOR': '本科', 
+                    'MASTER': '硕士', 
+                    'PHD': '博士'
+                };
+                html += `<tr>`;
+                if (!isStudent) {
+                    html += `<td>${app.student?.name || 'N/A'}</td>`;
+                }
+                html += `<td>${app.universityName || 'N/A'}</td>
+                    <td>${app.major}</td>
+                    <td>${degreeMap[app.degreeType] || app.degreeType}</td>
+                    <td>${statusMap[app.status] || app.status}</td>
+                    <td>${app.applicationDate || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-small btn-info" onclick="viewApplication(${app.id})">查看</button>
+                        <button class="btn btn-small" onclick="editApplication(${app.id})">编辑</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteApplication(${app.id})">删除</button>
+                    </td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // 显示分页控件
+        function displayPagination() {
+            const paginationDiv = document.getElementById('pagination');
+            
+            console.log('分页数据:', paginationData);
+            
+            // 总是显示分页信息，即使只有一页
+            let html = '';
+            
+            // 只有当有多页时才显示翻页按钮
+            if (paginationData.totalPages > 1) {
+                // 首页按钮
+                if (paginationData.currentPage > 0) {
+                    html += `<button class="btn btn-small" onclick="loadApplications(0)">首页</button>`;
+                    html += `<button class="btn btn-small" onclick="loadApplications(${paginationData.currentPage - 1})">上一页</button>`;
+                }
+                
+                // 尾页按钮
+                if (paginationData.currentPage < paginationData.totalPages - 1) {
+                    html += `<button class="btn btn-small" onclick="loadApplications(${paginationData.currentPage + 1})">下一页</button>`;
+                    html += `<button class="btn btn-small" onclick="loadApplications(${paginationData.totalPages - 1})">尾页</button>`;
+                }
+                
+                // 添加跳转功能
+                html += `<span style="margin-left: 20px;">
+                    <input type="number" id="pageJumpInput" min="1" max="${paginationData.totalPages}" 
+                           value="${paginationData.currentPage + 1}" 
+                           style="width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; margin: 0 5px;"
+                           onkeypress="if(event.key === 'Enter') jumpToPage()">
+                    <button class="btn btn-small" onclick="jumpToPage()">跳转</button>
+                </span>`;
+            }
+            
+            // 显示统计信息（总是显示）
+            html += `<span style="margin-left: 20px; color: #666;">共 ${paginationData.totalElements} 条记录，第 ${paginationData.currentPage + 1}/${paginationData.totalPages} 页</span>`;
+            
+            paginationDiv.innerHTML = html;
+        }
+        
+        // 跳转到指定页面
+        function jumpToPage() {
+            const input = document.getElementById('pageJumpInput');
+            if (!input) return;
+            
+            const pageNumber = parseInt(input.value);
+            const totalPages = paginationData.totalPages;
+            
+            if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > totalPages) {
+                alert(`请输入1到${totalPages}之间的页数！`);
+                input.value = paginationData.currentPage + 1;
+                return;
+            }
+            
+            loadApplications(pageNumber - 1);
+        }
+
+        async function showAddModal() {
+            // 检查权限 - 只有管理员和咨询顾问可以创建申请
+            if (roleManager && roleManager.isStudent()) {
+                showMessage('学生用户无法创建申请，请联系管理员或咨询顾问', 'error');
+                return;
+            }
+            
+            // 重置表单
+            document.getElementById('applicationForm').reset();
+            document.getElementById('applicationId').value = '';
+            
+            // 检查roleManager是否已初始化，如果没有则创建临时实例
+            if (!roleManager) {
+                console.log('roleManager未初始化，创建临时实例...');
+                roleManager = new RoleManager();
+            }
+            
+            // 管理员和咨询顾问可以创建申请
+            if (roleManager && (roleManager.isAdmin() || roleManager.isCounselor())) {
+                document.getElementById('modalTitle').textContent = '创建申请';
+                document.getElementById('submitText').textContent = '保存申请';
+                
+                // 隐藏申请流程指导
+                document.getElementById('applicationGuide').style.display = 'none';
+                
+                // 加载学生、大学和咨询顾问数据
+                await Promise.all([loadStudents(), loadUniversities(), loadCounselors()]);
+                
+                // 显示所有字段
+                document.getElementById('studentIdGroup').style.display = 'block';
+                document.getElementById('statusSection').style.display = 'block';
+                document.getElementById('counselorSection').style.display = 'block';
+                
+                document.getElementById('studentId').disabled = false;
+                document.getElementById('status').value = 'DRAFT';
+            }
+            
+            // 显示模态框
+            document.getElementById('applicationModal').style.display = 'block';
+            
+            // 聚焦到第一个输入字段
+            setTimeout(() => {
+                document.getElementById('studentId').focus();
+            }, 100);
+        }
+
+        async function editApplication(id) {
+            const app = applications.find(a => a.id === id);
+            if (!app) return;
+            
+            // 检查权限：学生只能编辑自己的申请
+            if (roleManager && roleManager.isStudent()) {
+                const currentUser = getUser();
+                if (currentUser && app.student?.user?.username !== currentUser.username) {
+                    showMessage('您只能编辑自己的申请', 'error');
+                    return;
+                }
+            }
+            
+            document.getElementById('modalTitle').textContent = '编辑申请';
+            document.getElementById('submitText').textContent = '保存修改';
+            document.getElementById('applicationId').value = app.id;
+            
+            if (roleManager && roleManager.isStudent()) {
+                // 学生角色：只加载大学数据
+                await loadUniversities();
+                
+                // 隐藏申请流程指导
+                document.getElementById('applicationGuide').style.display = 'none';
+                
+                // 获取当前用户的学生信息
+                try {
+                    const userResponse = await apiRequest('/users/me');
+                    if (userResponse.code === 200) {
+                        const user = userResponse.data;
+                        const studentResponse = await apiRequest(`/students/user/${user.id}`);
+                        if (studentResponse.code === 200 && studentResponse.data) {
+                            const currentStudent = studentResponse.data;
+                            document.getElementById('studentId').value = currentStudent.id;
+                            document.getElementById('studentId').disabled = true;
+                            
+                            // 隐藏学生选择字段
+                            document.getElementById('studentIdGroup').style.display = 'none';
+                            
+                            // 隐藏状态管理部分
+                            document.getElementById('statusSection').style.display = 'none';
+                            
+                            // 隐藏咨询顾问部分
+                            document.getElementById('counselorSection').style.display = 'none';
+                        }
+                    }
+                } catch (error) {
+                    console.error('获取学生信息失败:', error);
+                    showMessage('获取学生信息失败', 'error');
+                    return;
+                }
+            } else {
+                // 管理员和咨询顾问：加载学生、大学和咨询顾问数据
+                await Promise.all([loadStudents(), loadUniversities(), loadCounselors()]);
+                
+                // 隐藏申请流程指导
+                document.getElementById('applicationGuide').style.display = 'none';
+                
+                // 显示所有字段
+                document.getElementById('studentIdGroup').style.display = 'block';
+                document.getElementById('statusSection').style.display = 'block';
+                document.getElementById('counselorSection').style.display = 'block';
+                
+                document.getElementById('studentId').disabled = false;
+            }
+            
+            // 设置表单值
+            document.getElementById('studentId').value = app.student?.id || '';
+            document.getElementById('universityId').value = app.university?.id || '';
+            document.getElementById('major').value = app.major || '';
+            document.getElementById('country').value = app.country || '';
+            document.getElementById('degreeType').value = app.degreeType || '';
+            document.getElementById('status').value = app.status || 'DRAFT';
+            document.getElementById('applicationDate').value = app.applicationDate || '';
+            document.getElementById('statusUrl').value = app.statusUrl || '';
+            
+            // 签证信息
+            document.getElementById('visaSubmissionDate').value = app.visaSubmissionDate || '';
+            document.getElementById('interviewDate').value = app.interviewDate || '';
+            document.getElementById('medicalExamDate').value = app.medicalExamDate || '';
+            document.getElementById('visaApprovedDate').value = app.visaApprovedDate || '';
+            document.getElementById('visaRejectedDate').value = app.visaRejectedDate || '';
+            
+            // 后续跟踪
+            document.getElementById('departureDate').value = app.departureDate || '';
+            document.getElementById('airportPickupAccommodation').value = app.airportPickupAccommodation || '';
+            document.getElementById('followUpStatus').value = app.followUpStatus || '';
+            document.getElementById('arrivalStatus').value = app.arrivalStatus || '';
+            
+            document.getElementById('counselorId').value = app.counselor?.id || '';
+            document.getElementById('writerId').value = app.writer?.id || '';
+            document.getElementById('notes').value = app.notes || '';
+            
+            document.getElementById('applicationModal').style.display = 'block';
+            
+            // 聚焦到第一个输入字段
+            setTimeout(() => {
+                document.getElementById('universityId').focus();
+            }, 100);
+        }
+
+        function closeModal() {
+            document.getElementById('applicationModal').style.display = 'none';
+        }
+
+        // 查看申请详情
+        async function viewApplication(id) {
+            const app = applications.find(a => a.id === id);
+            if (!app) return;
+            
+            // 学位类型映射
+            const degreeTypeMap = {
+                'JUNIOR_HIGH': '初中',
+                'HIGH_SCHOOL': '高中',
+                'BACHELOR': '本科',
+                'MASTER': '硕士',
+                'PHD': '博士'
+            };
+            
+            // 构建显示内容
+            let content = `
+                <style>
+                    .info-section {
+                        background: white;
+                        border-radius: 8px;
+                        padding: 20px;
+                        margin-bottom: 20px;
+                        border-left: 4px solid #667eea;
+                    }
+                    .info-section h3 {
+                        color: #667eea;
+                        margin-bottom: 15px;
+                        font-size: 16px;
+                        font-weight: bold;
+                    }
+                    .info-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                        gap: 15px;
+                    }
+                    .info-item {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        gap: 10px;
+                        padding: 8px 12px;
+                        background: #f8f9fa;
+                        border-radius: 6px;
+                    }
+                    .info-item label {
+                        font-weight: 600;
+                        color: #495057;
+                        font-size: 13px;
+                        white-space: nowrap;
+                        min-width: 80px;
+                    }
+                    .info-item span {
+                        color: #212529;
+                        font-size: 14px;
+                        word-break: break-word;
+                        flex: 1;
+                    }
+                    .info-item-full {
+                        grid-column: 1 / -1;
+                    }
+                    .status-link {
+                        color: #667eea;
+                        text-decoration: none;
+                    }
+                    .status-link:hover {
+                        text-decoration: underline;
+                    }
+                </style>
+                
+                <div class="info-section">
+                    <h3>基本信息</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>申请人:</label>
+                            <span>${app.student?.name || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>申请学校:</label>
+                            <span>${app.universityName || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>申请国家:</label>
+                            <span>${app.country || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>申请专业:</label>
+                            <span>${app.major || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>学位类型:</label>
+                            <span>${degreeTypeMap[app.degreeType] || app.degreeType || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>申请状态:</label>
+                            <span style="color: ${getStatusColor(app.status)}; font-weight: bold;">${statusMap[app.status] || app.status || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>申请日期:</label>
+                            <span>${app.applicationDate || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>咨询顾问:</label>
+                            <span>${app.counselor?.realName || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>文案:</label>
+                            <span>${app.writer?.realName || 'N/A'}</span>
+                        </div>
+                        ${app.statusUrl ? `
+                        <div class="info-item">
+                            <label>申请状态链接:</label>
+                            <span><a href="${app.statusUrl}" target="_blank" class="status-link">查看状态</a></span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>签证信息</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>递交签证日期:</label>
+                            <span>${app.visaSubmissionDate || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>面试日期:</label>
+                            <span>${app.interviewDate || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>体检日期:</label>
+                            <span>${app.medicalExamDate || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>获签日期:</label>
+                            <span>${app.visaApprovedDate || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>拒签日期:</label>
+                            <span>${app.visaRejectedDate || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>后续跟踪</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>出发日期:</label>
+                            <span>${app.departureDate || 'N/A'}</span>
+                        </div>
+                        <div class="info-item info-item-full">
+                            <label>接机住宿:</label>
+                            <span>${app.airportPickupAccommodation || 'N/A'}</span>
+                        </div>
+                        <div class="info-item info-item-full">
+                            <label>回访情况:</label>
+                            <span>${app.followUpStatus || 'N/A'}</span>
+                        </div>
+                        <div class="info-item info-item-full">
+                            <label>抵达后情况:</label>
+                            <span>${app.arrivalStatus || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 添加备注信息
+            if (app.notes) {
+                content += `
+                    <div class="info-section">
+                        <h3>备注信息</h3>
+                        <div class="info-item">
+                            <span>${app.notes}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 设置内容和样式
+            document.getElementById('viewApplicationContent').innerHTML = content;
+            document.getElementById('viewApplicationModal').style.display = 'block';
+            
+            // 保存当前查看的申请ID，用于编辑功能
+            window.currentViewingApplicationId = id;
+        }
+
+        // 关闭查看模态框
+        function closeViewModal() {
+            document.getElementById('viewApplicationModal').style.display = 'none';
+            window.currentViewingApplicationId = null;
+        }
+
+
+        // 获取状态颜色
+        function getStatusColor(status) {
+            switch (status) {
+                case 'DRAFT': return '#6c757d';
+                case 'SUBMITTED': return '#007bff';
+                case 'UNDER_REVIEW': return '#ffc107';
+                case 'ACCEPTED': return '#28a745';
+                case 'REJECTED': return '#dc3545';
+                case 'WAITLISTED': return '#fd7e14';
+                case 'WITHDRAWN': return '#6f42c1';
+                default: return '#6c757d';
+            }
+        }
+
+        async function deleteApplication(id) {
+            const app = applications.find(a => a.id === id);
+            if (!app) return;
+            
+            // 检查权限：学生只能删除自己的申请
+            if (roleManager && roleManager.isStudent()) {
+                const currentUser = getUser();
+                if (currentUser && app.student?.user?.username !== currentUser.username) {
+                    showMessage('您只能删除自己的申请', 'error');
+                    return;
+                }
+            }
+            
+            if (!confirm('确定要删除这个申请吗？')) return;
+            
+            try {
+                const data = await apiRequest(`/applications/${id}`, { method: 'DELETE' });
+                if (data.code === 200) {
+                    showMessage('删除成功', 'success');
+                    loadApplications();
+                }
+            } catch (error) {
+                showMessage('删除失败', 'error');
+            }
+        }
+
+        document.getElementById('applicationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // 验证表单
+            if (!validateForm()) {
+                return;
+            }
+            
+            // 显示加载状态
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitLoading = document.getElementById('submitLoading');
+            
+            submitBtn.disabled = true;
+            submitText.style.display = 'none';
+            submitLoading.style.display = 'inline';
+            
+            try {
+                // 检查token
+                const token = getToken();
+                console.log('当前token:', token ? token.substring(0, 20) + '...' : 'null');
+                
+                if (!token) {
+                    console.error('未找到token，需要重新登录');
+                    showMessage('登录已过期，请重新登录', 'error');
+                    submitBtn.disabled = false;
+                    submitText.style.display = 'inline';
+                    submitLoading.style.display = 'none';
+                    return;
+                }
+                
+                const id = document.getElementById('applicationId').value;
+                const studentIdValue = document.getElementById('studentId').value;
+                const universityIdValue = document.getElementById('universityId').value;
+                
+                // 验证学生ID
+                if (!studentIdValue) {
+                    console.error('学生ID为空，无法提交表单');
+                    showMessage('请先选择申请人', 'error');
+                    // 恢复按钮状态
+                    submitBtn.disabled = false;
+                    submitText.style.display = 'inline';
+                    submitLoading.style.display = 'none';
+                    return;
+                }
+                
+                // 验证大学ID
+                if (!universityIdValue) {
+                    console.error('大学ID为空，无法提交表单');
+                    showMessage('请先选择申请学校', 'error');
+                    // 恢复按钮状态
+                    submitBtn.disabled = false;
+                    submitText.style.display = 'inline';
+                    submitLoading.style.display = 'none';
+                    return;
+                }
+                
+                // 获取大学名称
+                let universityName = '';
+                if (universityIdValue) {
+                    const selectedUniversity = universities.find(u => u.id === parseInt(universityIdValue));
+                    universityName = selectedUniversity ? selectedUniversity.name : '';
+                }
+                
+                const formData = {
+                    student: { id: parseInt(studentIdValue) },
+                    universityName: universityName,
+                    major: document.getElementById('major').value.trim(),
+                    country: document.getElementById('country').value.trim(),
+                    degreeType: document.getElementById('degreeType').value,
+                    status: document.getElementById('status').value,
+                    applicationDate: document.getElementById('applicationDate').value || null,
+                    statusUrl: document.getElementById('statusUrl').value.trim(),
+                    notes: document.getElementById('notes').value.trim()
+                };
+
+                // 签证信息
+                formData.visaSubmissionDate = document.getElementById('visaSubmissionDate').value || null;
+                formData.interviewDate = document.getElementById('interviewDate').value || null;
+                formData.medicalExamDate = document.getElementById('medicalExamDate').value || null;
+                formData.visaApprovedDate = document.getElementById('visaApprovedDate').value || null;
+                formData.visaRejectedDate = document.getElementById('visaRejectedDate').value || null;
+                
+                // 后续跟踪
+                formData.departureDate = document.getElementById('departureDate').value || null;
+                formData.airportPickupAccommodation = document.getElementById('airportPickupAccommodation').value.trim();
+                formData.followUpStatus = document.getElementById('followUpStatus').value.trim();
+                formData.arrivalStatus = document.getElementById('arrivalStatus').value.trim();
+
+                // 如果有选择咨询顾问和文案，添加到表单数据中
+                const counselorId = document.getElementById('counselorId').value;
+                if (counselorId) {
+                    formData.counselor = { id: parseInt(counselorId) };
+                }
+                const writerId = document.getElementById('writerId').value;
+                if (writerId) {
+                    formData.writer = { id: parseInt(writerId) };
+                }
+                
+                const url = id ? `/applications/${id}` : '/applications';
+                const method = id ? 'PUT' : 'POST';
+                
+                console.log('提交申请数据:', {
+                    url: url,
+                    method: method,
+                    formData: formData
+                });
+                
+                const data = await apiRequest(url, {
+                    method: method,
+                    body: JSON.stringify(formData)
+                });
+                
+                console.log('API响应:', data);
+                
+                if (data.code === 200) {
+                    showMessage(id ? '申请更新成功！' : '申请创建成功！', 'success');
+                    closeModal();
+                    loadApplications();
+                } else {
+                    showMessage(data.message || '操作失败', 'error');
+                }
+            } catch (error) {
+                console.error('操作失败:', error);
+                showMessage('操作失败: ' + error.message, 'error');
+            } finally {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitText.style.display = 'inline';
+                submitLoading.style.display = 'none';
+            }
+        });
+        
+        // 表单验证函数
+        function validateForm() {
+            const universityId = document.getElementById('universityId').value;
+            const major = document.getElementById('major').value.trim();
+            const degreeType = document.getElementById('degreeType').value;
+            
+            // 清除之前的错误提示
+            clearFormErrors();
+            
+            let isValid = true;
+            let errorMessage = '';
+            
+            if (!universityId) {
+                showFieldError('universityId', '请选择申请学校');
+                isValid = false;
+            }
+            
+            if (!major) {
+                showFieldError('major', '请输入申请专业');
+                isValid = false;
+            }
+            
+            if (!degreeType) {
+                showFieldError('degreeType', '请选择学位类型');
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                showMessage('请填写所有必填字段', 'warning');
+                // 聚焦到第一个错误字段
+                const firstErrorField = document.querySelector('.field-error');
+                if (firstErrorField) {
+                    firstErrorField.focus();
+                }
+            }
+            
+            return isValid;
+        }
+        
+        // 显示字段错误
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const formGroup = field.closest('.form-group');
+            
+            // 添加错误样式
+            field.classList.add('field-error');
+            
+            // 创建错误消息元素
+            const errorElement = document.createElement('small');
+            errorElement.className = 'field-error-message';
+            errorElement.style.color = '#dc3545';
+            errorElement.textContent = message;
+            
+            // 插入错误消息
+            formGroup.appendChild(errorElement);
+        }
+        
+        // 清除表单错误
+        function clearFormErrors() {
+            // 移除错误样式
+            document.querySelectorAll('.field-error').forEach(field => {
+                field.classList.remove('field-error');
+            });
+            
+            // 移除错误消息
+            document.querySelectorAll('.field-error-message').forEach(error => {
+                error.remove();
+            });
+        }
+
+        // 为学生角色更新UI
+        function updateUIForStudentRole() {
+            if (roleManager && roleManager.isStudent()) {
+                // 学生用户现在可以看到所有申请，保持页面标题为"申请管理"
+                const pageTitle = document.getElementById('pageTitle');
+                if (pageTitle) {
+                    pageTitle.textContent = '申请管理';
+                }
+                
+                // 更新创建按钮文本
+                const createBtn = document.getElementById('createApplicationBtn');
+                if (createBtn) {
+                    createBtn.textContent = '+ 创建申请';
+                    createBtn.style.backgroundColor = '#667eea';
+                }
+                
+                // 学生用户现在可以看到所有申请，包括学生列
+                // 移除了隐藏学生选择列的逻辑
+            }
+        }
+
+        function showMessage(message, type) {
+            // 创建消息元素
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${type}`;
+            messageDiv.textContent = message;
+            
+            // 设置样式
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                max-width: 300px;
+                word-wrap: break-word;
+            `;
+            
+            // 根据类型设置背景色
+            if (type === 'success') {
+                messageDiv.style.backgroundColor = '#4CAF50';
+            } else if (type === 'error') {
+                messageDiv.style.backgroundColor = '#f44336';
+            } else if (type === 'warning') {
+                messageDiv.style.backgroundColor = '#ff9800';
+            } else {
+                messageDiv.style.backgroundColor = '#2196F3';
+            }
+            
+            // 添加到页面
+            document.body.appendChild(messageDiv);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 3000);
+        }
+
+        // 等待页面加载完成后初始化
+        window.addEventListener('load', function() {
+            console.log('applications.html: 页面加载完成，准备初始化');
+            console.log('当前token:', isAuthenticated() ? '存在' : '不存在');
+            
+            // 等待角色管理器初始化完成（roleManager.js会在DOMContentLoaded中初始化）
+            setTimeout(() => {
+                console.log('开始加载申请数据');
+                // 所有角色都使用统一的loadApplications函数加载数据
+                loadApplications();
+                updateUIForStudentRole();
+            }, 200); // 稍微增加延迟时间以确保roleManager已初始化
+        });
+
+        window.onclick = function(event) {
+            const applicationModal = document.getElementById('applicationModal');
+            const viewModal = document.getElementById('viewApplicationModal');
+            
+            if (event.target == applicationModal) {
+                closeModal();
+            } else if (event.target == viewModal) {
+                closeViewModal();
+            }
+        }
+
+        function showAdvancedSearch() {
+            window.location.href = '/advanced-search.html';
+        }
+    </script>
+</body>
+</html>
+
+
+

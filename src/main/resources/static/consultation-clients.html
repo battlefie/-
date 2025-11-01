@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咨询客户管理 - 留学管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .client-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .client-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .client-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .client-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .client-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+        }
+        .info-label {
+            font-weight: bold;
+            margin-right: 8px;
+            min-width: 80px;
+        }
+        .modal-content {
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .form-section {
+            margin-bottom: 25px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body style="background: #f5f5f5;">
+    <nav>
+        <div class="nav-content">
+            <div class="logo">🎓 留学管理系统</div>
+            <ul class="nav-links">
+                <li><a href="/dashboard.html">仪表盘</a></li>
+                <li><a href="/students.html">学生管理</a></li>
+                <li><a href="/universities.html">大学信息</a></li>
+                <li><a href="/applications.html">申请管理</a></li>
+                <li><a href="#" onclick="logout()">退出登录</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1>咨询客户管理</h1>
+                    <button class="btn btn-small" onclick="showAddModal()">+ 添加客户</button>
+                </div>
+            </div>
+
+            <div class="card" style="max-width: none; padding: 20px;">
+                <div id="clientsList">
+                    <p style="text-align: center; color: #999;">加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑模态框 -->
+    <div id="clientModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">添加咨询客户</h2>
+            <form id="clientForm">
+                <input type="hidden" id="clientId">
+                
+                <div class="form-section">
+                    <h4 class="section-title">基本信息</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">姓名 *</label>
+                            <input type="text" id="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contactPhone">联系电话</label>
+                            <input type="text" id="contactPhone">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="gender">性别</label>
+                            <select id="gender">
+                                <option value="">请选择</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">客户状态</label>
+                            <select id="status">
+                                <option value="潜在客户">潜在客户</option>
+                                <option value="意向客户">意向客户</option>
+                                <option value="签约客户">签约客户</option>
+                                <option value="已流失">已流失</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="consultationDate">咨询日期</label>
+                            <input type="date" id="consultationDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="channel">渠道来源</label>
+                            <input type="text" id="channel" placeholder="如：线上、朋友介绍等">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">邮箱</label>
+                        <input type="email" id="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="homeAddress">家庭住址</label>
+                        <input type="text" id="homeAddress">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4 class="section-title">留学意向</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="targetCountry">意向国家</label>
+                            <input type="text" id="targetCountry" placeholder="如：美国、英国等">
+                        </div>
+                        <div class="form-group">
+                            <label for="targetDegree">意向学位</label>
+                            <select id="targetDegree">
+                                <option value="">请选择</option>
+                                <option value="JUNIOR_HIGH">初中</option>
+                                <option value="HIGH_SCHOOL">高中</option>
+                                <option value="BACHELOR">本科</option>
+                                <option value="MASTER">硕士</option>
+                                <option value="PHD">博士</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="graduationDate">毕业时间</label>
+                        <input type="date" id="graduationDate">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4 class="section-title">学术背景</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="currentSchool">现就读学校</label>
+                            <input type="text" id="currentSchool">
+                        </div>
+                        <div class="form-group">
+                            <label for="major">专业</label>
+                            <input type="text" id="major">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="englishScore">英语成绩</label>
+                        <input type="text" id="englishScore" placeholder="如：TOEFL 100, IELTS 7.0">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4 class="section-title">其他信息</h4>
+                    <div class="form-group">
+                        <label for="notes">备注</label>
+                        <textarea id="notes" rows="3" placeholder="记录重要的咨询信息"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="followUpStatus">回访情况</label>
+                        <textarea id="followUpStatus" rows="3" placeholder="记录回访内容和结果"></textarea>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn" id="submitBtn">
+                        <span id="submitText">保存</span>
+                        <span id="submitLoading" style="display: none;">保存中...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 查看详情模态框 -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeViewModal()">&times;</span>
+            <h2>客户详情</h2>
+            <div id="viewContent"></div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn" onclick="closeViewModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/roleManager.js"></script>
+    <script>
+        let clients = [];
+        let currentPage = 0;
+        const pageSize = 10;
+
+        async function loadClients(page = 0) {
+            try {
+                const data = await apiRequest(`/consultation-clients?page=${page}&size=${pageSize}`);
+                if (data.code === 200) {
+                    if (data.data.content) {
+                        clients = data.data.content;
+                        displayClients(clients);
+                    } else {
+                        clients = data.data;
+                        displayClients(clients);
+                    }
+                }
+            } catch (error) {
+                console.error('加载客户失败:', error);
+                showMessage('加载客户失败', 'error');
+            }
+        }
+
+        function displayClients(clientsList) {
+            const container = document.getElementById('clientsList');
+            
+            if (clientsList.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999;">暂无咨询客户</p>';
+                return;
+            }
+
+            let html = '';
+            clientsList.forEach(client => {
+                const statusColors = {
+                    '潜在客户': '#667eea',
+                    '意向客户': '#48bb78',
+                    '签约客户': '#38a169',
+                    '已流失': '#f56565'
+                };
+                
+                html += `
+                    <div class="client-card" onclick="viewClient(${client.id})">
+                        <div class="client-header">
+                            <div class="client-name">${client.name || 'N/A'}</div>
+                            <div class="status-badge" style="background: ${statusColors[client.status] || '#ccc'}; color: white;">
+                                ${client.status || 'N/A'}
+                            </div>
+                        </div>
+                        <div class="client-info">
+                            <div class="info-item">
+                                <span class="info-label">联系电话:</span>
+                                <span>${client.contactPhone || 'N/A'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">意向国家:</span>
+                                <span>${client.targetCountry || 'N/A'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">意向学位:</span>
+                                <span>${getDegreeDisplay(client.targetDegree)}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">咨询日期:</span>
+                                <span>${client.consultationDate || 'N/A'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">渠道来源:</span>
+                                <span>${client.channel || 'N/A'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">现就读学校:</span>
+                                <span>${client.currentSchool || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; text-align: right;">
+                            <button class="btn btn-small" onclick="event.stopPropagation(); editClient(${client.id})">编辑</button>
+                            <button class="btn btn-small" onclick="event.stopPropagation(); deleteClient(${client.id})">删除</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function getDegreeDisplay(degree) {
+            const degreeMap = {
+                'JUNIOR_HIGH': '初中',
+                'HIGH_SCHOOL': '高中',
+                'BACHELOR': '本科',
+                'MASTER': '硕士',
+                'PHD': '博士'
+            };
+            return degreeMap[degree] || degree || 'N/A';
+        }
+
+        async function viewClient(id) {
+            const client = clients.find(c => c.id === id);
+            if (!client) return;
+
+            const content = `
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                    <div><strong>姓名:</strong> ${client.name || 'N/A'}</div>
+                    <div><strong>联系电话:</strong> ${client.contactPhone || 'N/A'}</div>
+                    <div><strong>性别:</strong> ${client.gender || 'N/A'}</div>
+                    <div><strong>客户状态:</strong> ${client.status || 'N/A'}</div>
+                    <div><strong>咨询日期:</strong> ${client.consultationDate || 'N/A'}</div>
+                    <div><strong>渠道来源:</strong> ${client.channel || 'N/A'}</div>
+                    <div><strong>意向国家:</strong> ${client.targetCountry || 'N/A'}</div>
+                    <div><strong>意向学位:</strong> ${getDegreeDisplay(client.targetDegree)}</div>
+                    <div><strong>毕业时间:</strong> ${client.graduationDate || 'N/A'}</div>
+                    <div><strong>英语成绩:</strong> ${client.englishScore || 'N/A'}</div>
+                    <div><strong>现就读学校:</strong> ${client.currentSchool || 'N/A'}</div>
+                    <div><strong>专业:</strong> ${client.major || 'N/A'}</div>
+                    <div><strong>邮箱:</strong> ${client.email || 'N/A'}</div>
+                    <div><strong>家庭住址:</strong> ${client.homeAddress || 'N/A'}</div>
+                    <div><strong>备注:</strong> ${client.notes || 'N/A'}</div>
+                    <div><strong>回访情况:</strong> ${client.followUpStatus || 'N/A'}</div>
+                </div>
+            `;
+            
+            document.getElementById('viewContent').innerHTML = content;
+            document.getElementById('viewModal').style.display = 'block';
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').style.display = 'none';
+        }
+
+        async function showAddModal() {
+            document.getElementById('clientForm').reset();
+            document.getElementById('clientId').value = '';
+            document.getElementById('modalTitle').textContent = '添加咨询客户';
+            document.getElementById('submitText').textContent = '保存';
+            document.getElementById('clientModal').style.display = 'block';
+        }
+
+        async function editClient(id) {
+            const client = clients.find(c => c.id === id);
+            if (!client) return;
+
+            document.getElementById('clientId').value = client.id;
+            document.getElementById('name').value = client.name || '';
+            document.getElementById('contactPhone').value = client.contactPhone || '';
+            document.getElementById('gender').value = client.gender || '';
+            document.getElementById('status').value = client.status || '潜在客户';
+            document.getElementById('consultationDate').value = client.consultationDate || '';
+            document.getElementById('channel').value = client.channel || '';
+            document.getElementById('targetCountry').value = client.targetCountry || '';
+            document.getElementById('targetDegree').value = client.targetDegree || '';
+            document.getElementById('graduationDate').value = client.graduationDate || '';
+            document.getElementById('englishScore').value = client.englishScore || '';
+            document.getElementById('currentSchool').value = client.currentSchool || '';
+            document.getElementById('major').value = client.major || '';
+            document.getElementById('homeAddress').value = client.homeAddress || '';
+            document.getElementById('email').value = client.email || '';
+            document.getElementById('notes').value = client.notes || '';
+            document.getElementById('followUpStatus').value = client.followUpStatus || '';
+
+            document.getElementById('modalTitle').textContent = '编辑咨询客户';
+            document.getElementById('submitText').textContent = '保存修改';
+            document.getElementById('clientModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('clientModal').style.display = 'none';
+        }
+
+        async function deleteClient(id) {
+            if (!confirm('确定要删除这个客户吗？')) return;
+
+            try {
+                const data = await apiRequest(`/consultation-clients/${id}`, { method: 'DELETE' });
+                if (data.code === 200) {
+                    showMessage('删除成功', 'success');
+                    loadClients();
+                }
+            } catch (error) {
+                showMessage('删除失败', 'error');
+            }
+        }
+
+        document.getElementById('clientForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitLoading = document.getElementById('submitLoading');
+            
+            submitBtn.disabled = true;
+            submitText.style.display = 'none';
+            submitLoading.style.display = 'inline';
+
+            try {
+                const id = document.getElementById('clientId').value;
+                const formData = {
+                    name: document.getElementById('name').value.trim(),
+                    contactPhone: document.getElementById('contactPhone').value.trim(),
+                    gender: document.getElementById('gender').value || null,
+                    status: document.getElementById('status').value,
+                    consultationDate: document.getElementById('consultationDate').value || null,
+                    channel: document.getElementById('channel').value.trim(),
+                    targetCountry: document.getElementById('targetCountry').value.trim(),
+                    targetDegree: document.getElementById('targetDegree').value || null,
+                    graduationDate: document.getElementById('graduationDate').value || null,
+                    englishScore: document.getElementById('englishScore').value.trim(),
+                    currentSchool: document.getElementById('currentSchool').value.trim(),
+                    major: document.getElementById('major').value.trim(),
+                    homeAddress: document.getElementById('homeAddress').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    notes: document.getElementById('notes').value.trim(),
+                    followUpStatus: document.getElementById('followUpStatus').value.trim()
+                };
+
+                const url = id ? `/consultation-clients/${id}` : '/consultation-clients';
+                const method = id ? 'PUT' : 'POST';
+                
+                const data = await apiRequest(url, {
+                    method: method,
+                    body: JSON.stringify(formData)
+                });
+                
+                if (data.code === 200) {
+                    showMessage(id ? '客户更新成功！' : '客户创建成功！', 'success');
+                    closeModal();
+                    loadClients();
+                } else {
+                    showMessage(data.message || '操作失败', 'error');
+                }
+            } catch (error) {
+                showMessage('操作失败: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitText.style.display = 'inline';
+                submitLoading.style.display = 'none';
+            }
+        });
+
+        function showMessage(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `message message-${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+            `;
+            
+            if (type === 'success') {
+                alertDiv.style.backgroundColor = '#4CAF50';
+            } else if (type === 'error') {
+                alertDiv.style.backgroundColor = '#f44336';
+            } else {
+                alertDiv.style.backgroundColor = '#2196F3';
+            }
+            
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 3000);
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const clientModal = document.getElementById('clientModal');
+            const viewModal = document.getElementById('viewModal');
+            
+            if (event.target == clientModal) {
+                closeModal();
+            } else if (event.target == viewModal) {
+                closeViewModal();
+            }
+        }
+
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', () => {
+            loadClients();
+        });
+    </script>
+</body>
+</html>

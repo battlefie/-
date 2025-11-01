@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录（调试版） - 留学信息管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .debug-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .debug-log {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #666;
+            padding-left: 10px;
+        }
+        .debug-log.success { border-color: #28a745; color: #28a745; }
+        .debug-log.error { border-color: #dc3545; color: #dc3545; }
+        .debug-log.info { border-color: #17a2b8; color: #17a2b8; }
+        .debug-log.warning { border-color: #ffc107; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>登录（调试版）</h1>
+        
+        <!-- 系统状态检查 -->
+        <div id="systemCheck" style="margin-bottom: 20px; padding: 15px; background: #e7f3ff; border-radius: 8px;">
+            <h3 style="margin: 0 0 10px 0;">系统状态检查</h3>
+            <div id="checkResults"></div>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" value="admin" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" value="admin123" required>
+            </div>
+            <button type="submit" class="btn">登录</button>
+        </form>
+        
+        <div class="text-center">
+            <p><a href="/login.html">返回普通登录页面</a></p>
+            <p><a href="/index.html">返回首页</a></p>
+        </div>
+        
+        <!-- 调试面板 -->
+        <div class="debug-panel" id="debugPanel">
+            <strong>📋 调试日志：</strong>
+            <div id="debugLogs"></div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        // 调试日志函数
+        function addDebugLog(message, type = 'info') {
+            const logsContainer = document.getElementById('debugLogs');
+            const logElement = document.createElement('div');
+            logElement.className = `debug-log ${type}`;
+            logElement.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+            console.log(message);
+        }
+
+        // 系统检查
+        async function checkSystem() {
+            const resultsDiv = document.getElementById('checkResults');
+            let html = '';
+
+            // 1. 检查当前URL
+            const currentURL = window.location.href;
+            if (currentURL.startsWith('file://')) {
+                html += '❌ 错误：使用了文件协议。请通过 http://localhost:8080 访问<br>';
+                addDebugLog('错误：使用了文件协议访问', 'error');
+            } else {
+                html += '✅ URL协议正确: ' + currentURL + '<br>';
+                addDebugLog('URL协议检查通过: ' + currentURL, 'success');
+            }
+
+            // 2. 检查后端连接
+            try {
+                addDebugLog('正在检查后端连接...', 'info');
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'test', password: 'test' })
+                });
+                
+                if (response.status === 200 || response.status === 500) {
+                    html += '✅ 后端服务运行正常<br>';
+                    addDebugLog('后端服务连接成功', 'success');
+                } else {
+                    html += '⚠️ 后端返回异常状态: ' + response.status + '<br>';
+                    addDebugLog('后端返回状态码: ' + response.status, 'warning');
+                }
+            } catch (error) {
+                html += '❌ 无法连接到后端服务！请确保后端已启动。<br>';
+                html += '<small>错误详情: ' + error.message + '</small><br>';
+                addDebugLog('后端连接失败: ' + error.message, 'error');
+            }
+
+            // 3. 检查localStorage
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                html += '✅ LocalStorage 可用<br>';
+                addDebugLog('LocalStorage检查通过', 'success');
+            } catch (error) {
+                html += '❌ LocalStorage 不可用<br>';
+                addDebugLog('LocalStorage不可用: ' + error.message, 'error');
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // 页面加载时执行检查
+        document.addEventListener('DOMContentLoaded', () => {
+            addDebugLog('=== 页面加载完成，开始系统检查 ===', 'info');
+            checkSystem();
+        });
+
+        // 登录表单处理
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            addDebugLog('=== 开始登录流程 ===', 'info');
+            addDebugLog('用户名: ' + username, 'info');
+            addDebugLog('API地址: /api/auth/login', 'info');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> 登录中...';
+            
+            try {
+                // 1. 发送登录请求
+                addDebugLog('步骤1: 发送登录请求...', 'info');
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                addDebugLog('步骤2: 收到响应，状态码: ' + response.status, 'info');
+                
+                const data = await response.json();
+                addDebugLog('步骤3: 解析响应数据', 'info');
+                addDebugLog('响应code: ' + data.code, 'info');
+                addDebugLog('响应message: ' + data.message, 'info');
+                
+                if (data.code === 200) {
+                    addDebugLog('✅ 登录验证成功！', 'success');
+                    
+                    // 2. 保存token
+                    addDebugLog('步骤4: 保存token到localStorage...', 'info');
+                    localStorage.setItem('token', data.data.token);
+                    const savedToken = localStorage.getItem('token');
+                    if (savedToken) {
+                        addDebugLog('✅ Token保存成功', 'success');
+                        addDebugLog('Token前20字符: ' + savedToken.substring(0, 20) + '...', 'info');
+                    } else {
+                        addDebugLog('❌ Token保存失败！', 'error');
+                    }
+                    
+                    // 3. 保存用户信息
+                    addDebugLog('步骤5: 保存用户信息...', 'info');
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+                    const savedUser = localStorage.getItem('user');
+                    if (savedUser) {
+                        addDebugLog('✅ 用户信息保存成功', 'success');
+                        addDebugLog('用户角色: ' + data.data.user.role, 'info');
+                    } else {
+                        addDebugLog('❌ 用户信息保存失败！', 'error');
+                    }
+                    
+                    showMessage('登录成功！准备跳转...', 'success');
+                    
+                    // 4. 延迟跳转
+                    addDebugLog('步骤6: 2秒后跳转到dashboard...', 'info');
+                    setTimeout(() => {
+                        addDebugLog('步骤7: 执行跳转到 /dashboard.html', 'info');
+                        window.location.href = '/dashboard.html';
+                    }, 2000);
+                    
+                } else {
+                    addDebugLog('❌ 登录失败: ' + data.message, 'error');
+                    showMessage(data.message, 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '登录';
+                }
+            } catch (error) {
+                addDebugLog('❌ 发生异常: ' + error.message, 'error');
+                addDebugLog('异常堆栈: ' + error.stack, 'error');
+                showMessage('登录失败: ' + error.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '登录';
+            }
+        });
+    </script>
+</body>
+</html>
+
