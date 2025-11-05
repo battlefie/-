@@ -3,6 +3,7 @@ package com.studyabroad.controller;
 import com.studyabroad.dto.ApiResponse;
 import com.studyabroad.dto.LoginRequest;
 import com.studyabroad.dto.RegisterRequest;
+import com.studyabroad.dto.ResetPasswordRequest;
 import com.studyabroad.service.UserService;
 import com.studyabroad.service.PermissionService;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +46,16 @@ public class AuthController {
         try {
             Map<String, Object> result = userService.login(request);
             return ApiResponse.success("登录成功", result);
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponse<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        try {
+            userService.resetPassword(request.getUsername(), request.getEmail(), request.getNewPassword());
+            return ApiResponse.success("密码重置成功，请使用新密码登录", null);
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());
         }

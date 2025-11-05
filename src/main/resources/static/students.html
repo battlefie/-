@@ -173,13 +173,11 @@
                     <div class="form-group" style="flex: 1;">
                         <label for="counselorName">负责咨询顾问</label>
                         <select id="counselorName" name="counselorName">
-                            <option value="">请选择咨询顾问</option>
                         </select>
                     </div>
                     <div class="form-group" style="flex: 1;">
                         <label for="writerName">负责文案</label>
                         <select id="writerName" name="writerName">
-                            <option value="">请选择文案</option>
                         </select>
                     </div>
                 </div>
@@ -537,7 +535,7 @@
             container.innerHTML = html;
         }
 
-        function showAddModal() {
+        async function showAddModal() {
             // 检查权限
             if (roleManager && !roleManager.hasPermission('student_management')) {
                 roleManager.showPermissionDenied('学生角色只能管理自己的信息');
@@ -548,6 +546,35 @@
             document.getElementById('studentForm').reset();
             document.getElementById('studentId').value = '';
             document.getElementById('userId').value = '';
+            
+            // 如果是咨询顾问，自动设置咨询顾问为自己，并禁用该字段
+            if (roleManager && roleManager.isCounselor()) {
+                try {
+                    const userResponse = await apiRequest('/users/me');
+                    if (userResponse.code === 200) {
+                        const currentUser = userResponse.data;
+                        const counselorSelect = document.getElementById('counselorName');
+                        if (counselorSelect && currentUser.realName) {
+                            // 设置为当前咨询顾问
+                            counselorSelect.value = currentUser.realName;
+                            // 禁用选择框
+                            counselorSelect.disabled = true;
+                            counselorSelect.style.backgroundColor = '#f5f5f5';
+                            counselorSelect.style.cursor = 'not-allowed';
+                        }
+                    }
+                } catch (error) {
+                    console.error('获取当前用户信息失败:', error);
+                }
+            } else {
+                // 非咨询顾问角色，启用选择框
+                const counselorSelect = document.getElementById('counselorName');
+                if (counselorSelect) {
+                    counselorSelect.disabled = false;
+                    counselorSelect.style.backgroundColor = '';
+                    counselorSelect.style.cursor = '';
+                }
+            }
             
             document.getElementById('studentModal').style.display = 'block';
         }
@@ -594,6 +621,24 @@
             // 设置咨询顾问和文案
             document.getElementById('counselorName').value = student.counselor ? student.counselor.realName : '';
             document.getElementById('writerName').value = student.writer ? student.writer.realName : '';
+            
+            // 如果是咨询顾问，禁用咨询顾问字段（不能更改）
+            if (roleManager && roleManager.isCounselor()) {
+                const counselorSelect = document.getElementById('counselorName');
+                if (counselorSelect) {
+                    counselorSelect.disabled = true;
+                    counselorSelect.style.backgroundColor = '#f5f5f5';
+                    counselorSelect.style.cursor = 'not-allowed';
+                }
+            } else {
+                // 非咨询顾问角色，启用选择框
+                const counselorSelect = document.getElementById('counselorName');
+                if (counselorSelect) {
+                    counselorSelect.disabled = false;
+                    counselorSelect.style.backgroundColor = '';
+                    counselorSelect.style.cursor = '';
+                }
+            }
             
             // 加载家庭信息
             try {
@@ -1544,7 +1589,7 @@
                     
                     // 填充咨询顾问选项
                     const counselorSelect = document.getElementById('counselorName');
-                    counselorSelect.innerHTML = '<option value="">请选择咨询顾问</option>';
+                    counselorSelect.innerHTML = ''; // 不添加默认选项
                     counselors.forEach(counselor => {
                         const option = document.createElement('option');
                         option.value = counselor.realName;
@@ -1554,7 +1599,7 @@
                     
                     // 填充文案选项
                     const writerSelect = document.getElementById('writerName');
-                    writerSelect.innerHTML = '<option value="">请选择文案</option>';
+                    writerSelect.innerHTML = ''; // 不添加默认选项
                     writers.forEach(writer => {
                         const option = document.createElement('option');
                         option.value = writer.realName;

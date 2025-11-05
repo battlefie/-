@@ -248,11 +248,6 @@
                             <input type="date" id="applicationDate" name="applicationDate">
                             <small class="form-help">您提交申请的日期</small>
                         </div>
-                        <div class="form-group">
-                            <label for="decisionDate">结果通知日期</label>
-                            <input type="date" id="decisionDate" name="decisionDate">
-                            <small class="form-help">学校通知申请结果的日期</small>
-                        </div>
                     </div>
                 </div>
                 
@@ -263,14 +258,12 @@
                         <div class="form-group">
                             <label for="counselorId">负责咨询顾问</label>
                             <select id="counselorId" name="counselorId">
-                                <option value="">请选择咨询顾问</option>
                             </select>
                             <small class="form-help">选择负责您申请的咨询顾问</small>
                         </div>
                         <div class="form-group">
                             <label for="writerId">负责文案</label>
                             <select id="writerId" name="writerId">
-                                <option value="">请选择文案</option>
                             </select>
                             <small class="form-help">选择负责您申请的文案</small>
                         </div>
@@ -284,11 +277,6 @@
                         <label for="notes">个人备注</label>
                         <textarea id="notes" name="notes" placeholder="您可以在这里记录申请过程中的重要信息，比如：&#10;- 申请的特殊要求&#10;- 个人优势说明&#10;- 申请时间安排&#10;- 其他重要信息" rows="4"></textarea>
                         <small class="form-help">记录申请过程中的重要信息</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="feedback">学校反馈</label>
-                        <textarea id="feedback" name="feedback" placeholder="记录学校的反馈信息，如：&#10;- 面试安排&#10;- 补充材料要求&#10;- 录取条件&#10;- 其他通知" rows="4"></textarea>
-                        <small class="form-help">记录学校的反馈和通知信息</small>
                     </div>
                 </div>
                 
@@ -694,19 +682,31 @@
                     } else {
                         students = data.data;
                     }
+                    
+                    console.log(`加载学生数据成功，共${students.length}个学生`);
+                    if (students.length === 0) {
+                        console.warn('学生列表为空，可能是没有分配学生或权限问题');
+                    }
+                    
+                    populateStudentSelect();
+                } else {
+                    console.error('加载学生数据失败:', data.message);
+                    students = [];
                     populateStudentSelect();
                 }
             } catch (error) {
                 console.error('加载学生数据失败:', error);
+                students = [];
+                populateStudentSelect();
             }
         }
 
-        async function loadUniversities() {
+        async function loadUniversities(skipDefaultOption = false) {
             try {
                 const data = await apiRequest('/universities');
                 if (data.code === 200) {
                     universities = data.data;
-                    populateUniversitySelect();
+                    populateUniversitySelect(skipDefaultOption);
                 }
             } catch (error) {
                 console.error('加载大学数据失败:', error);
@@ -747,19 +747,29 @@
             
             students.forEach(student => {
                 const option = document.createElement('option');
-                option.value = student.id;
+                // 确保ID转换为字符串，避免类型不匹配问题
+                option.value = String(student.id);
                 option.textContent = `${student.name || 'N/A'}`;
                 select.appendChild(option);
             });
         }
 
-        function populateUniversitySelect() {
+        function populateUniversitySelect(skipDefaultOption = false) {
             const select = document.getElementById('universityId');
-            select.innerHTML = '<option value="">请选择申请学校</option>';
+            select.innerHTML = '';
+            
+            // 只有在不是编辑模式时才添加默认选项
+            if (!skipDefaultOption) {
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '请选择申请学校';
+                select.appendChild(defaultOption);
+            }
             
             universities.forEach(university => {
                 const option = document.createElement('option');
-                option.value = university.id;
+                // 确保ID转换为字符串，避免类型不匹配问题
+                option.value = String(university.id);
                 option.textContent = `${university.name} (${university.country})`;
                 select.appendChild(option);
             });
@@ -767,7 +777,7 @@
 
         function populateCounselorSelect() {
             const select = document.getElementById('counselorId');
-            select.innerHTML = '<option value="">请选择咨询顾问</option>';
+            select.innerHTML = ''; // 不添加默认选项
             
             counselors.forEach(counselor => {
                 const option = document.createElement('option');
@@ -779,7 +789,7 @@
 
         function populateWriterSelect(writers) {
             const select = document.getElementById('writerId');
-            select.innerHTML = '<option value="">请选择文案</option>';
+            select.innerHTML = ''; // 不添加默认选项
             
             writers.forEach(writer => {
                 const option = document.createElement('option');
@@ -937,12 +947,83 @@
             loadApplications(pageNumber - 1);
         }
 
+        // 恢复学生选择框（如果之前被替换成了input）
+        function restoreStudentSelect() {
+            const studentIdGroup = document.getElementById('studentIdGroup');
+            const studentNameDisplay = document.getElementById('studentNameDisplay');
+            const studentIdHidden = document.getElementById('studentIdHidden');
+            
+            // 如果存在显示的文本输入框，说明之前被替换了，需要恢复
+            if (studentNameDisplay && studentIdGroup) {
+                // 创建select元素
+                const studentSelect = document.createElement('select');
+                studentSelect.id = 'studentId';
+                studentSelect.name = 'studentId';
+                studentSelect.required = true;
+                studentSelect.className = studentNameDisplay.className;
+                studentSelect.style.width = '100%';
+                studentSelect.style.padding = '10px';
+                studentSelect.style.border = '2px solid #e1e5e9';
+                studentSelect.style.borderRadius = '6px';
+                studentSelect.style.fontSize = '14px';
+                
+                // 添加默认选项
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '请选择申请人';
+                studentSelect.appendChild(defaultOption);
+                
+                // 替换input为select
+                studentNameDisplay.parentNode.replaceChild(studentSelect, studentNameDisplay);
+                
+                // 移除隐藏的input
+                if (studentIdHidden) {
+                    studentIdHidden.remove();
+                }
+            }
+        }
+        
+        // 恢复文案选择框（如果之前被替换成了input）
+        function restoreWriterSelect() {
+            const writerIdGroup = document.querySelector('#counselorSection .form-row .form-group:last-child');
+            const writerNameDisplay = document.getElementById('writerNameDisplay');
+            const writerIdHidden = document.getElementById('writerIdHidden');
+            
+            // 如果存在显示的文本输入框，说明之前被替换了，需要恢复
+            if (writerNameDisplay && writerIdGroup) {
+                // 创建select元素
+                const writerSelect = document.createElement('select');
+                writerSelect.id = 'writerId';
+                writerSelect.name = 'writerId';
+                writerSelect.className = writerNameDisplay.className;
+                writerSelect.style.width = '100%';
+                writerSelect.style.padding = '10px';
+                writerSelect.style.border = '2px solid #e1e5e9';
+                writerSelect.style.borderRadius = '6px';
+                writerSelect.style.fontSize = '14px';
+                
+                // 不添加默认选项
+                
+                // 替换input为select
+                writerNameDisplay.parentNode.replaceChild(writerSelect, writerNameDisplay);
+                
+                // 移除隐藏的input
+                if (writerIdHidden) {
+                    writerIdHidden.remove();
+                }
+            }
+        }
+
         async function showAddModal() {
-            // 检查权限 - 只有管理员和咨询顾问可以创建申请
+            // 检查权限 - 学生不能创建申请
             if (roleManager && roleManager.isStudent()) {
                 showMessage('学生用户无法创建申请，请联系管理员或咨询顾问', 'error');
                 return;
             }
+            
+            // 恢复学生和文案选择框（如果之前被替换了）
+            restoreStudentSelect();
+            restoreWriterSelect();
             
             // 重置表单
             document.getElementById('applicationForm').reset();
@@ -954,14 +1035,14 @@
                 roleManager = new RoleManager();
             }
             
+            document.getElementById('modalTitle').textContent = '创建申请';
+            document.getElementById('submitText').textContent = '保存申请';
+            
+            // 隐藏申请流程指导
+            document.getElementById('applicationGuide').style.display = 'none';
+            
             // 管理员和咨询顾问可以创建申请
             if (roleManager && (roleManager.isAdmin() || roleManager.isCounselor())) {
-                document.getElementById('modalTitle').textContent = '创建申请';
-                document.getElementById('submitText').textContent = '保存申请';
-                
-                // 隐藏申请流程指导
-                document.getElementById('applicationGuide').style.display = 'none';
-                
                 // 加载学生、大学和咨询顾问数据
                 await Promise.all([loadStudents(), loadUniversities(), loadCounselors()]);
                 
@@ -972,6 +1053,128 @@
                 
                 document.getElementById('studentId').disabled = false;
                 document.getElementById('status').value = 'DRAFT';
+                
+                // 监听学生选择变化，自动设置文案字段（作为默认值，管理员可以修改）
+                const studentSelect = document.getElementById('studentId');
+                const writerSelect = document.getElementById('writerId');
+                if (studentSelect && writerSelect) {
+                    // 移除之前的监听器（如果存在）
+                    studentSelect.removeEventListener('change', window.autoSetWriterHandler);
+                    
+                    // 定义处理函数
+                    const handleStudentChange = function() {
+                        const selectedStudentId = this.value;
+                        if (selectedStudentId && students.length > 0) {
+                            const selectedStudent = students.find(s => s.id == selectedStudentId);
+                            if (selectedStudent && selectedStudent.writer && selectedStudent.writer.id) {
+                                // 自动设置文案为学生的文案（作为默认值，管理员可以修改）
+                                writerSelect.value = selectedStudent.writer.id;
+                                // 保持文案字段可编辑
+                                writerSelect.disabled = false;
+                                writerSelect.style.backgroundColor = '';
+                                writerSelect.style.cursor = '';
+                            } else {
+                                // 如果学生没有文案，允许选择
+                                writerSelect.disabled = false;
+                                writerSelect.style.backgroundColor = '';
+                                writerSelect.style.cursor = '';
+                                writerSelect.value = '';
+                            }
+                        } else {
+                            // 未选择学生，清空文案字段
+                            writerSelect.value = '';
+                            writerSelect.disabled = false;
+                            writerSelect.style.backgroundColor = '';
+                            writerSelect.style.cursor = '';
+                        }
+                    };
+                    
+                    // 保存到全局，便于后续移除
+                    window.autoSetWriterHandler = handleStudentChange;
+                    studentSelect.addEventListener('change', handleStudentChange);
+                    
+                    // 如果已有选中的学生，立即设置
+                    if (studentSelect.value) {
+                        handleStudentChange.call(studentSelect);
+                    }
+                }
+            } else if (roleManager && roleManager.isWriter()) {
+                // 文案角色也可以创建申请
+                // 加载学生、大学和咨询顾问数据（后端会自动过滤为文案负责的学生）
+                await Promise.all([loadStudents(), loadUniversities(), loadCounselors()]);
+                
+                // 检查是否有可用的学生
+                if (students.length === 0) {
+                    showMessage('您还没有被分配负责的学生，无法创建申请。请联系管理员分配学生。', 'warning');
+                    // 关闭模态框
+                    closeModal();
+                    return;
+                }
+                
+                // 显示所有字段
+                document.getElementById('studentIdGroup').style.display = 'block';
+                document.getElementById('statusSection').style.display = 'block';
+                document.getElementById('counselorSection').style.display = 'block';
+                
+                document.getElementById('studentId').disabled = false;
+                document.getElementById('status').value = 'DRAFT';
+                
+                // 文案创建申请时，禁用咨询顾问和文案字段
+                const counselorSelect = document.getElementById('counselorId');
+                const writerSelect = document.getElementById('writerId');
+                if (counselorSelect) {
+                    counselorSelect.disabled = true;
+                    counselorSelect.style.backgroundColor = '#f5f5f5';
+                    counselorSelect.style.cursor = 'not-allowed';
+                }
+                if (writerSelect) {
+                    writerSelect.disabled = true;
+                    writerSelect.style.backgroundColor = '#f5f5f5';
+                    writerSelect.style.cursor = 'not-allowed';
+                    
+                    // 自动设置文案为当前登录的文案
+                    try {
+                        const userResponse = await apiRequest('/users/me');
+                        if (userResponse.code === 200) {
+                            const currentUser = userResponse.data;
+                            if (currentUser.id) {
+                                writerSelect.value = currentUser.id;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('获取当前用户信息失败:', error);
+                    }
+                }
+                
+                // 监听学生选择变化，自动设置咨询顾问
+                const studentSelect = document.getElementById('studentId');
+                if (studentSelect && counselorSelect) {
+                    // 定义处理函数
+                    const handleStudentChange = function() {
+                        const selectedStudentId = this.value;
+                        if (selectedStudentId && students.length > 0) {
+                            const selectedStudent = students.find(s => s.id == selectedStudentId);
+                            if (selectedStudent && selectedStudent.counselor && counselorSelect) {
+                                counselorSelect.value = selectedStudent.counselor.id;
+                            }
+                        }
+                    };
+                    
+                    // 先移除之前的监听器（使用命名函数便于移除）
+                    studentSelect.removeEventListener('change', window.writerStudentChangeHandler);
+                    // 保存到全局，便于后续移除
+                    window.writerStudentChangeHandler = handleStudentChange;
+                    studentSelect.addEventListener('change', handleStudentChange);
+                    
+                    // 如果已有选中的学生，自动设置咨询顾问
+                    if (studentSelect.value) {
+                        const selectedStudentId = studentSelect.value;
+                        const selectedStudent = students.find(s => s.id == selectedStudentId);
+                        if (selectedStudent && selectedStudent.counselor) {
+                            counselorSelect.value = selectedStudent.counselor.id;
+                        }
+                    }
+                }
             }
             
             // 显示模态框
@@ -979,7 +1182,10 @@
             
             // 聚焦到第一个输入字段
             setTimeout(() => {
-                document.getElementById('studentId').focus();
+                const studentSelect = document.getElementById('studentId');
+                if (studentSelect) {
+                    studentSelect.focus();
+                }
             }, 100);
         }
 
@@ -996,13 +1202,17 @@
                 }
             }
             
+            // 恢复学生和文案选择框（如果之前被替换了）
+            restoreStudentSelect();
+            restoreWriterSelect();
+            
             document.getElementById('modalTitle').textContent = '编辑申请';
             document.getElementById('submitText').textContent = '保存修改';
             document.getElementById('applicationId').value = app.id;
             
             if (roleManager && roleManager.isStudent()) {
-                // 学生角色：只加载大学数据
-                await loadUniversities();
+                // 学生角色：只加载大学数据（编辑模式下跳过默认选项）
+                await loadUniversities(true);
                 
                 // 隐藏申请流程指导
                 document.getElementById('applicationGuide').style.display = 'none';
@@ -1033,9 +1243,51 @@
                     showMessage('获取学生信息失败', 'error');
                     return;
                 }
+            } else if (roleManager && roleManager.isWriter()) {
+                // 文案角色：加载学生、大学和咨询顾问数据，自动获取申请人并禁用选择
+                await Promise.all([loadStudents(), loadUniversities(true), loadCounselors()]);
+                
+                // 隐藏申请流程指导
+                document.getElementById('applicationGuide').style.display = 'none';
+                
+                // 显示所有字段
+                document.getElementById('studentIdGroup').style.display = 'block';
+                document.getElementById('statusSection').style.display = 'block';
+                document.getElementById('counselorSection').style.display = 'block';
+                
+                // 文案编辑申请时，将下拉选择框替换为只读文本输入框，直接显示申请人姓名
+                const studentIdGroup = document.getElementById('studentIdGroup');
+                const studentSelect = document.getElementById('studentId');
+                if (studentSelect && studentIdGroup) {
+                    // 创建隐藏的input来保存学生ID（用于表单提交）
+                    const hiddenStudentId = document.createElement('input');
+                    hiddenStudentId.type = 'hidden';
+                    hiddenStudentId.id = 'studentIdHidden';
+                    hiddenStudentId.name = 'studentId';
+                    hiddenStudentId.value = app.student?.id || '';
+                    
+                    // 创建只读文本输入框显示申请人姓名
+                    const studentNameInput = document.createElement('input');
+                    studentNameInput.type = 'text';
+                    studentNameInput.id = 'studentNameDisplay';
+                    studentNameInput.value = app.student?.name || '未选择申请人';
+                    studentNameInput.readOnly = true;
+                    studentNameInput.style.cursor = 'default';
+                    studentNameInput.style.backgroundColor = '#f5f5f5';
+                    studentNameInput.className = studentSelect.className;
+                    studentNameInput.style.width = '100%';
+                    studentNameInput.style.padding = '10px';
+                    studentNameInput.style.border = '2px solid #e1e5e9';
+                    studentNameInput.style.borderRadius = '6px';
+                    studentNameInput.style.fontSize = '14px';
+                    
+                    // 替换select为input
+                    studentSelect.parentNode.replaceChild(studentNameInput, studentSelect);
+                    studentIdGroup.appendChild(hiddenStudentId);
+                }
             } else {
-                // 管理员和咨询顾问：加载学生、大学和咨询顾问数据
-                await Promise.all([loadStudents(), loadUniversities(), loadCounselors()]);
+                // 管理员和咨询顾问：加载学生、大学和咨询顾问数据（编辑模式下跳过默认选项）
+                await Promise.all([loadStudents(), loadUniversities(true), loadCounselors()]);
                 
                 // 隐藏申请流程指导
                 document.getElementById('applicationGuide').style.display = 'none';
@@ -1046,11 +1298,188 @@
                 document.getElementById('counselorSection').style.display = 'block';
                 
                 document.getElementById('studentId').disabled = false;
+                
+                // 监听学生选择变化，自动设置文案字段（作为默认值，管理员可以修改）
+                const studentSelect = document.getElementById('studentId');
+                const writerSelect = document.getElementById('writerId');
+                if (studentSelect && writerSelect) {
+                    // 移除之前的监听器（如果存在）
+                    studentSelect.removeEventListener('change', window.autoSetWriterHandlerEdit);
+                    
+                    // 定义处理函数
+                    const handleStudentChange = function() {
+                        const selectedStudentId = this.value;
+                        if (selectedStudentId && students.length > 0) {
+                            const selectedStudent = students.find(s => s.id == selectedStudentId);
+                            if (selectedStudent && selectedStudent.writer && selectedStudent.writer.id) {
+                                // 自动设置文案为学生的文案（作为默认值，管理员可以修改）
+                                writerSelect.value = selectedStudent.writer.id;
+                                // 保持文案字段可编辑
+                                writerSelect.disabled = false;
+                                writerSelect.style.backgroundColor = '';
+                                writerSelect.style.cursor = '';
+                            } else {
+                                // 如果学生没有文案，允许选择
+                                writerSelect.disabled = false;
+                                writerSelect.style.backgroundColor = '';
+                                writerSelect.style.cursor = '';
+                            }
+                        } else {
+                            // 未选择学生，清空文案字段
+                            writerSelect.value = '';
+                            writerSelect.disabled = false;
+                            writerSelect.style.backgroundColor = '';
+                            writerSelect.style.cursor = '';
+                        }
+                    };
+                    
+                    // 保存到全局，便于后续移除
+                    window.autoSetWriterHandlerEdit = handleStudentChange;
+                    studentSelect.addEventListener('change', handleStudentChange);
+                    
+                    // 如果已有选中的学生，立即设置
+                    if (studentSelect.value) {
+                        handleStudentChange.call(studentSelect);
+                    }
+                }
             }
             
-            // 设置表单值
-            document.getElementById('studentId').value = app.student?.id || '';
-            document.getElementById('universityId').value = app.university?.id || '';
+            // 设置表单值（如果不是文案角色，这里会重新设置studentId，文案角色已经在上面设置了）
+            if (!roleManager || !roleManager.isWriter()) {
+                // 使用setTimeout确保DOM已完全更新和选项已生成
+                setTimeout(() => {
+                    const studentSelect = document.getElementById('studentId');
+                    if (studentSelect && app.student?.id) {
+                        // 转换为字符串以确保类型匹配
+                        const studentIdStr = String(app.student.id);
+                        
+                        // 检查选项是否存在
+                        const optionExists = Array.from(studentSelect.options).some(
+                            opt => opt.value === studentIdStr
+                        );
+                        
+                        if (optionExists) {
+                            studentSelect.value = studentIdStr;
+                            // 设置完学生ID后，触发文案字段的自动设置
+                            if (window.autoSetWriterHandlerEdit) {
+                                window.autoSetWriterHandlerEdit.call(studentSelect);
+                            }
+                        } else if (app.student?.name) {
+                            // 如果通过ID找不到，尝试通过学生姓名匹配
+                            const options = Array.from(studentSelect.options);
+                            const matchedOption = options.find(opt => 
+                                opt.textContent.includes(app.student.name)
+                            );
+                            if (matchedOption) {
+                                studentSelect.value = matchedOption.value;
+                                // 设置完学生ID后，触发文案字段的自动设置
+                                if (window.autoSetWriterHandlerEdit) {
+                                    window.autoSetWriterHandlerEdit.call(studentSelect);
+                                }
+                            }
+                        }
+                    }
+                }, 150);
+            }
+            
+            // 设置申请学校：根据universityName匹配
+            // 使用setTimeout确保DOM已完全更新和选项已生成
+            setTimeout(() => {
+                let universityId = '';
+                
+                // Application实体只有universityName字段，没有university对象
+                if (app.universityName && universities && universities.length > 0) {
+                    const normalizedAppName = app.universityName.trim();
+                    
+                    // 精确匹配：完全匹配大学名称
+                    let matchedUniversity = universities.find(u => {
+                        const normalizedUName = u.name.trim();
+                        return normalizedUName === normalizedAppName;
+                    });
+                    
+                    // 如果精确匹配失败，尝试部分匹配
+                    if (!matchedUniversity) {
+                        matchedUniversity = universities.find(u => {
+                            const normalizedUName = u.name.trim();
+                            return normalizedUName.includes(normalizedAppName) ||
+                                   normalizedAppName.includes(normalizedUName);
+                        });
+                    }
+                    
+                    if (matchedUniversity) {
+                        universityId = matchedUniversity.id;
+                        console.log(`找到匹配的大学: ${matchedUniversity.name}, ID: ${universityId}, 申请的大学名称: ${app.universityName}`);
+                    } else {
+                        console.warn(`未找到匹配的大学，申请的大学名称: ${app.universityName}, 可用大学列表:`, universities.map(u => u.name));
+                    }
+                }
+                
+                // 设置大学下拉框的值
+                const universitySelect = document.getElementById('universityId');
+                if (!universitySelect) return;
+                
+                if (universityId) {
+                    // 转换为字符串以确保类型匹配
+                    const universityIdStr = String(universityId);
+                    
+                    // 检查选项是否存在
+                    const optionExists = Array.from(universitySelect.options).some(
+                        opt => opt.value === universityIdStr
+                    );
+                    
+                    if (optionExists) {
+                        universitySelect.value = universityIdStr;
+                        // 验证设置是否成功
+                        if (universitySelect.value !== universityIdStr) {
+                            console.warn(`设置大学ID失败: 期望值=${universityIdStr}, 实际值=${universitySelect.value}`);
+                            // 如果设置失败，尝试通过选项文本匹配
+                            if (app.universityName) {
+                                const options = Array.from(universitySelect.options);
+                                const matchedOption = options.find(opt => {
+                                    const optionText = opt.textContent.trim();
+                                    const appName = app.universityName.trim();
+                                    return optionText.includes(appName) || 
+                                           optionText.startsWith(appName) ||
+                                           optionText.includes(`(${appName})`);
+                                });
+                                if (matchedOption) {
+                                    universitySelect.value = matchedOption.value;
+                                    console.log(`通过文本匹配成功设置大学: ${matchedOption.textContent}`);
+                                }
+                            }
+                        } else {
+                            const selectedOption = universitySelect.options[universitySelect.selectedIndex];
+                            console.log(`成功设置大学: ${selectedOption ? selectedOption.textContent : '未知'}`);
+                        }
+                    } else if (app.universityName) {
+                        // 如果通过ID找不到，尝试通过选项文本匹配
+                        const options = Array.from(universitySelect.options);
+                        const normalizedAppName = app.universityName.trim();
+                        const matchedOption = options.find(opt => {
+                            const optionText = opt.textContent.trim();
+                            return optionText.includes(normalizedAppName) || 
+                                   optionText.startsWith(normalizedAppName) ||
+                                   optionText.includes(`(${normalizedAppName})`);
+                        });
+                        if (matchedOption) {
+                            universitySelect.value = matchedOption.value;
+                        }
+                    }
+                } else if (app.universityName) {
+                    // 如果universityId为空，直接通过文本匹配
+                    const options = Array.from(universitySelect.options);
+                    const normalizedAppName = app.universityName.trim();
+                    const matchedOption = options.find(opt => {
+                        const optionText = opt.textContent.trim();
+                        return optionText.includes(normalizedAppName) || 
+                               optionText.startsWith(normalizedAppName);
+                    });
+                    if (matchedOption) {
+                        universitySelect.value = matchedOption.value;
+                    }
+                }
+            }, 100);
+            
             document.getElementById('major').value = app.major || '';
             document.getElementById('country').value = app.country || '';
             document.getElementById('degreeType').value = app.degreeType || '';
@@ -1071,8 +1500,54 @@
             document.getElementById('followUpStatus').value = app.followUpStatus || '';
             document.getElementById('arrivalStatus').value = app.arrivalStatus || '';
             
+            // 设置咨询顾问字段
             document.getElementById('counselorId').value = app.counselor?.id || '';
-            document.getElementById('writerId').value = app.writer?.id || '';
+            
+            // 文案编辑申请时，禁用咨询顾问字段，并将文案字段替换为只读文本输入框
+            if (roleManager && roleManager.isWriter()) {
+                // 禁用咨询顾问字段
+                const counselorSelect = document.getElementById('counselorId');
+                if (counselorSelect) {
+                    counselorSelect.disabled = true;
+                    counselorSelect.style.backgroundColor = '#f5f5f5';
+                    counselorSelect.style.cursor = 'not-allowed';
+                }
+                
+                // 将文案字段替换为只读文本输入框
+                const writerIdGroup = document.querySelector('#counselorSection .form-row .form-group:last-child');
+                const writerSelect = document.getElementById('writerId');
+                if (writerSelect && writerIdGroup) {
+                    // 创建隐藏的input来保存文案ID（用于表单提交）
+                    const hiddenWriterId = document.createElement('input');
+                    hiddenWriterId.type = 'hidden';
+                    hiddenWriterId.id = 'writerIdHidden';
+                    hiddenWriterId.name = 'writerId';
+                    hiddenWriterId.value = app.writer?.id || '';
+                    
+                    // 创建只读文本输入框显示文案姓名
+                    const writerNameInput = document.createElement('input');
+                    writerNameInput.type = 'text';
+                    writerNameInput.id = 'writerNameDisplay';
+                    writerNameInput.value = app.writer?.realName || app.writer?.username || '未选择文案';
+                    writerNameInput.readOnly = true;
+                    writerNameInput.style.cursor = 'default';
+                    writerNameInput.style.backgroundColor = '#f5f5f5';
+                    writerNameInput.className = writerSelect.className;
+                    writerNameInput.style.width = '100%';
+                    writerNameInput.style.padding = '10px';
+                    writerNameInput.style.border = '2px solid #e1e5e9';
+                    writerNameInput.style.borderRadius = '6px';
+                    writerNameInput.style.fontSize = '14px';
+                    
+                    // 替换select为input
+                    writerSelect.parentNode.replaceChild(writerNameInput, writerSelect);
+                    writerIdGroup.appendChild(hiddenWriterId);
+                }
+            } else {
+                // 非文案角色，正常设置文案下拉框的值
+                document.getElementById('writerId').value = app.writer?.id || '';
+            }
+            
             document.getElementById('notes').value = app.notes || '';
             
             document.getElementById('applicationModal').style.display = 'block';
@@ -1084,6 +1559,30 @@
         }
 
         function closeModal() {
+            // 恢复所有字段的状态
+            const counselorSelect = document.getElementById('counselorId');
+            const writerSelect = document.getElementById('writerId');
+            const studentSelect = document.getElementById('studentId');
+            
+            // 恢复顾问字段状态
+            if (counselorSelect) {
+                counselorSelect.disabled = false;
+                counselorSelect.style.backgroundColor = '';
+                counselorSelect.style.cursor = '';
+            }
+            
+            // 恢复文案字段状态（如果存在）
+            if (writerSelect) {
+                writerSelect.disabled = false;
+                writerSelect.style.backgroundColor = '';
+                writerSelect.style.cursor = '';
+            }
+            
+            // 恢复学生字段状态
+            if (studentSelect) {
+                studentSelect.disabled = false;
+            }
+            
             document.getElementById('applicationModal').style.display = 'none';
         }
 
@@ -1195,12 +1694,10 @@
                             <label>文案:</label>
                             <span>${app.writer?.realName || 'N/A'}</span>
                         </div>
-                        ${app.statusUrl ? `
                         <div class="info-item">
                             <label>申请状态链接:</label>
-                            <span><a href="${app.statusUrl}" target="_blank" class="status-link">查看状态</a></span>
+                            <span>${app.statusUrl ? `<a href="${app.statusUrl}" target="_blank" class="status-link">查看状态</a>` : 'N/A'}</span>
                         </div>
-                        ` : ''}
                     </div>
                 </div>
                 
@@ -1253,17 +1750,15 @@
                 </div>
             `;
             
-            // 添加备注信息
-            if (app.notes) {
-                content += `
-                    <div class="info-section">
-                        <h3>备注信息</h3>
-                        <div class="info-item">
-                            <span>${app.notes}</span>
-                        </div>
+            // 添加备注信息（总是显示，保持与编辑页面一致）
+            content += `
+                <div class="info-section">
+                    <h3>备注信息</h3>
+                    <div class="info-item info-item-full">
+                        <span style="white-space: pre-wrap;">${app.notes || 'N/A'}</span>
                     </div>
-                `;
-            }
+                </div>
+            `;
             
             // 设置内容和样式
             document.getElementById('viewApplicationContent').innerHTML = content;
@@ -1352,7 +1847,11 @@
                 }
                 
                 const id = document.getElementById('applicationId').value;
-                const studentIdValue = document.getElementById('studentId').value;
+                // 获取学生ID：优先从隐藏input获取（文案编辑时），否则从select获取
+                const studentIdHidden = document.getElementById('studentIdHidden');
+                const studentIdSelect = document.getElementById('studentId');
+                const studentIdValue = (studentIdHidden && studentIdHidden.value) || 
+                                      (studentIdSelect && studentIdSelect.value) || '';
                 const universityIdValue = document.getElementById('universityId').value;
                 
                 // 验证学生ID
@@ -1409,14 +1908,28 @@
                 formData.followUpStatus = document.getElementById('followUpStatus').value.trim();
                 formData.arrivalStatus = document.getElementById('arrivalStatus').value.trim();
 
-                // 如果有选择咨询顾问和文案，添加到表单数据中
+                // 如果有选择咨询顾问，添加到表单数据中
                 const counselorId = document.getElementById('counselorId').value;
                 if (counselorId) {
                     formData.counselor = { id: parseInt(counselorId) };
                 }
-                const writerId = document.getElementById('writerId').value;
-                if (writerId) {
-                    formData.writer = { id: parseInt(writerId) };
+                
+                // 业务规则：申请的文案必须与学生的文案一致
+                // 从学生信息中获取文案ID，而不是从表单字段获取
+                const selectedStudent = students.find(s => s.id == studentIdValue);
+                if (selectedStudent && selectedStudent.writer && selectedStudent.writer.id) {
+                    formData.writer = { id: selectedStudent.writer.id };
+                    console.log('从学生信息自动获取文案ID:', selectedStudent.writer.id, selectedStudent.writer.realName);
+                } else {
+                    // 如果学生没有文案，尝试从表单获取（向后兼容，但应该避免这种情况）
+                    const writerIdHidden = document.getElementById('writerIdHidden');
+                    const writerIdSelect = document.getElementById('writerId');
+                    const writerId = (writerIdHidden && writerIdHidden.value) || 
+                                    (writerIdSelect && writerIdSelect.value) || '';
+                    if (writerId) {
+                        formData.writer = { id: parseInt(writerId) };
+                        console.warn('学生没有文案，使用表单中的文案ID:', writerId);
+                    }
                 }
                 
                 const url = id ? `/applications/${id}` : '/applications';

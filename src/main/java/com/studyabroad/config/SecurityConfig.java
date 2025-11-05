@@ -46,9 +46,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/auth/reset-password").permitAll()
                 .requestMatchers("/api/auth/register").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/login.html", "/register.html", "/index.html", "/").permitAll()
+                .requestMatchers("/login.html", "/register.html", "/forgot-password.html", "/index.html", "/").permitAll()
                 .requestMatchers("/dashboard.html", "/students.html", "/universities.html", "/applications.html",
                                  "/consultation-clients.html", "/advanced-search.html").permitAll()
                 // 管理员可以访问所有API

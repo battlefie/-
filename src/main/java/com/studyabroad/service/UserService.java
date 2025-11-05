@@ -124,5 +124,39 @@ public class UserService {
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
+
+    /**
+     * 重置密码：通过用户名和邮箱验证身份后重置密码
+     */
+    @Transactional
+    public void resetPassword(String username, String email, String newPassword) {
+        // 根据用户名查找用户
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("用户名不存在"));
+
+        // 验证邮箱是否匹配
+        if (!user.getEmail().equalsIgnoreCase(email)) {
+            throw new RuntimeException("邮箱不匹配，无法重置密码");
+        }
+
+        // 验证账户是否启用
+        if (!user.getEnabled()) {
+            throw new RuntimeException("账户已被禁用，无法重置密码");
+        }
+
+        // 验证新密码不为空
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new RuntimeException("新密码不能为空");
+        }
+
+        // 验证密码长度（至少6位）
+        if (newPassword.length() < 6) {
+            throw new RuntimeException("新密码长度至少为6位");
+        }
+
+        // 更新密码
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }
 

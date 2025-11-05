@@ -47,6 +47,12 @@ public class ApplicationService {
             if (student != null) {
                 // 确认学生关联
                 application.setStudent(student);
+                
+                // 业务规则：申请的文案必须与学生的文案一致
+                // 如果学生有负责的文案，自动设置申请的文案为学生的文案
+                if (student.getWriter() != null) {
+                    application.setWriter(student.getWriter());
+                }
             }
         }
         
@@ -58,12 +64,11 @@ public class ApplicationService {
             }
         }
         
-        // 检查文案信息是否存在
-        if (application.getWriter() != null && application.getWriter().getId() != null) {
-            User writer = userRepository.findById(application.getWriter().getId()).orElse(null);
-            if (writer != null) {
-                application.setWriter(writer);
-            }
+        // 如果学生没有文案，才允许手动设置文案（但通常应该先给学生分配文案）
+        // 这种情况不应该发生，因为业务规则要求学生必须有文案
+        if (application.getWriter() == null && application.getStudent() != null && application.getStudent().getWriter() == null) {
+            // 如果请求中指定了文案，可以使用（但最好先给学生分配文案）
+            // 这里暂时允许，但实际业务中应该先给学生分配文案
         }
         
         return applicationRepository.save(application);
@@ -111,22 +116,49 @@ public class ApplicationService {
         return applicationRepository.findByCounselor(counselor, pageable);
     }
 
+    /**
+     * 根据文案ID获取申请（基于学生的writer_id，符合业务规则：文案负责申请）
+     * 业务规则：一个学生只能被一个文案负责，文案负责该学生的所有申请
+     */
     public List<Application> getApplicationsByWriterId(Long writerId) {
-        return applicationRepository.findByWriter(userRepository.findById(writerId).orElse(null));
+        // 使用新的查询方法，基于学生的writer_id查询
+        return applicationRepository.findByStudentWriterId(writerId);
     }
 
     /**
-     * 分页获取文案的申请
+     * 分页获取文案的申请（基于学生的writer_id）
+     * 业务规则：一个学生只能被一个文案负责，文案负责该学生的所有申请
      */
     public Page<Application> getApplicationsByWriterId(Long writerId, int page, int size) {
-        User writer = userRepository.findById(writerId).orElse(null);
         Pageable pageable = PageRequest.of(page, size, Sort.by("createTime").descending());
-        return applicationRepository.findByWriter(writer, pageable);
+        // 使用新的查询方法，基于学生的writer_id查询
+        return applicationRepository.findByStudentWriterIdPage(writerId, pageable);
     }
 
     @Transactional
     public Application updateApplication(Long id, Application applicationDetails) {
         Application application = getApplicationById(id);
+        
+        // 如果学生信息被更新，重新加载学生信息
+        if (applicationDetails.getStudent() != null && applicationDetails.getStudent().getId() != null) {
+            Student student = studentRepository.findById(applicationDetails.getStudent().getId()).orElse(null);
+            if (student != null) {
+                application.setStudent(student);
+                // 业务规则：申请的文案必须与学生的文案一致
+                if (student.getWriter() != null) {
+                    application.setWriter(student.getWriter());
+                }
+            }
+        } else {
+            // 如果没有更新学生，但需要确保文案与学生一致
+            if (application.getStudent() != null && application.getStudent().getWriter() != null) {
+                // 重新加载学生信息，确保获取最新的文案信息
+                Student currentStudent = studentRepository.findById(application.getStudent().getId()).orElse(null);
+                if (currentStudent != null && currentStudent.getWriter() != null) {
+                    application.setWriter(currentStudent.getWriter());
+                }
+            }
+        }
         
         if (applicationDetails.getMajor() != null) application.setMajor(applicationDetails.getMajor());
         if (applicationDetails.getDegreeType() != null) application.setDegreeType(applicationDetails.getDegreeType());
@@ -136,7 +168,8 @@ public class ApplicationService {
         if (applicationDetails.getCountry() != null) application.setCountry(applicationDetails.getCountry());
         if (applicationDetails.getNotes() != null) application.setNotes(applicationDetails.getNotes());
         if (applicationDetails.getCounselor() != null) application.setCounselor(applicationDetails.getCounselor());
-        if (applicationDetails.getWriter() != null) application.setWriter(applicationDetails.getWriter());
+        // 不直接更新Writer，因为Writer应该始终从学生获取
+        // if (applicationDetails.getWriter() != null) application.setWriter(applicationDetails.getWriter());
         
         // 签证信息
         if (applicationDetails.getVisaSubmissionDate() != null) application.setVisaSubmissionDate(applicationDetails.getVisaSubmissionDate());
