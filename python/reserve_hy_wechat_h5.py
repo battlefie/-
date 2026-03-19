@@ -4,14 +4,12 @@ import sys
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 from pathlib import Path
-import subprocess
 import json
 import time
 import traceback
 from datetime import datetime, timedelta
 
 import requests
-from bs4 import BeautifulSoup
 
 
 BASE = "http://hy.weiyouyuan.com.cn"
@@ -87,7 +85,6 @@ class WeChatSessionConfig:
     cdid: str = "20_1"        # 场地+时间段 ID（sd_cdid，例如 20_1 = 20 点第 1 号场）
     days: str = "AUTO_TODAY"  # 日期："AUTO_TODAY"=始终使用当天，或手动写成 "03/16"
 
-
 def build_session(cfg: WeChatSessionConfig) -> requests.Session:
     s = requests.Session()
     s.headers.update(
@@ -105,14 +102,24 @@ def build_session(cfg: WeChatSessionConfig) -> requests.Session:
     return s
 
 
-def http_get(session: requests.Session, url: str, *, timeout: int = 20) -> requests.Response:
+def http_get(session: requests.Session, url: str, *, timeout: int = 20, max_retries: int = 3) -> requests.Response:
     t0 = time.perf_counter()
     log_info(f"HTTP GET {url}")
-    try:
-        r = session.get(url, timeout=timeout)
-    except Exception as e:
-        log_error(f"GET 失败: {url}\n{format_exc(e)}")
-        raise
+    for attempt in range(max_retries):
+        try:
+            r = session.get(url, timeout=timeout)
+            break
+        except requests.exceptions.ConnectTimeout:
+            if attempt < max_retries - 1:
+                log_warn(f"GET 连接超时，正在重试 ({attempt + 1}/{max_retries})...")
+                time.sleep(1)
+                continue
+            else:
+                log_error(f"GET 失败: {url}\n连接超时，已重试 {max_retries} 次")
+                raise
+        except Exception as e:
+            log_error(f"GET 失败: {url}\n{format_exc(e)}")
+            raise
     dt = (time.perf_counter() - t0) * 1000
     log_info(f"GET 完成: status={r.status_code} elapsed_ms={dt:.1f}")
     return r
@@ -125,15 +132,26 @@ def http_post(
     data: dict,
     timeout: int = 20,
     log_request: bool = True,
+    max_retries: int = 3,
 ) -> requests.Response:
     t0 = time.perf_counter()
     if log_request:
         log_info(f"HTTP POST {url} (form_keys={','.join(list(data.keys()))})")
-    try:
-        r = session.post(url, data=data, timeout=timeout)
-    except Exception as e:
-        log_error(f"POST 失败: {url}\n{format_exc(e)}")
-        raise
+    for attempt in range(max_retries):
+        try:
+            r = session.post(url, data=data, timeout=timeout)
+            break
+        except requests.exceptions.ConnectTimeout:
+            if attempt < max_retries - 1:
+                log_warn(f"POST 连接超时，正在重试 ({attempt + 1}/{max_retries})...")
+                time.sleep(1)
+                continue
+            else:
+                log_error(f"POST 失败: {url}\n连接超时，已重试 {max_retries} 次")
+                raise
+        except Exception as e:
+            log_error(f"POST 失败: {url}\n{format_exc(e)}")
+            raise
     dt = (time.perf_counter() - t0) * 1000
     body_preview = (r.text or "")[:200].replace("\n", " ")
     if log_request:
@@ -148,8 +166,9 @@ def http_post_json(
     data: dict,
     timeout: int = 20,
     log_request: bool = True,
+    max_retries: int = 3,
 ) -> dict:
-    r = http_post(session, url, data=data, timeout=timeout, log_request=log_request)
+    r = http_post(session, url, data=data, timeout=timeout, log_request=log_request, max_retries=max_retries)
     try:
         return r.json()
     except Exception as e:
@@ -157,25 +176,7 @@ def http_post_json(
         raise
 
 
-def extract_webforms_state(html: str) -> Dict[str, str]:
-    """
-    ASP.NET WebForms 页面通常依赖隐藏字段维持状态：
-    __VIEWSTATE / __EVENTVALIDATION / __VIEWSTATEGENERATOR 等。
-    """
-    # 兼容：在 Windows/网络环境下 lxml 可能安装失败，先用内置解析器即可跑通流程
-    soup = BeautifulSoup(html, "html.parser")
-    data: Dict[str, str] = {}
-    for k in [
-        "__VIEWSTATE",
-        "__VIEWSTATEGENERATOR",
-        "__EVENTVALIDATION",
-        "__EVENTTARGET",
-        "__EVENTARGUMENT",
-    ]:
-        el = soup.find("input", {"name": k})
-        if el and el.get("value") is not None:
-            data[k] = el["value"]
-    return data
+
 
 
 def download_captcha_image(session: requests.Session, captcha_url: str) -> bytes:
@@ -183,41 +184,12 @@ def download_captcha_image(session: requests.Session, captcha_url: str) -> bytes
     下载验证码图片（GIF）。
     本项目当前不做 OCR/CNN 识别，验证码通过 0-20 穷举解决。
     """
-    r = http_get(session, captcha_url, timeout=15)
+    r = http_get(session, captcha_url, timeout=15, max_retries=3)
     r.raise_for_status()
     return r.content
 
 
-def recognize_captcha_by_local_cnn(image_path: str) -> Tuple[Optional[int], str]:
-    """
-    优先使用项目自带的 CNN（captcha/predict.py + checkpoints/best.pt），
-    避免依赖系统安装 tesseract。
-    """
-    repo_root = Path(__file__).resolve().parents[1]
-    predict_py = repo_root / "captcha" / "predict.py"
-    model_pt = repo_root / "captcha" / "checkpoints" / "best.pt"
-    if not predict_py.exists():
-        return None, f"CNN_UNAVAILABLE: missing {predict_py}"
-    if not model_pt.exists():
-        return None, f"CNN_UNAVAILABLE: missing {model_pt}"
 
-    try:
-        p = subprocess.run(
-            [sys.executable, str(predict_py), str(image_path), "--model", str(model_pt)],
-            cwd=str(repo_root),
-            capture_output=True,
-            text=True,
-            timeout=20,
-        )
-        if p.returncode != 0:
-            return None, f"CNN_ERROR: {p.stderr.strip() or p.stdout.strip()}"
-        out = (p.stdout or "").strip()
-        try:
-            return int(out), f"CNN_OK: {out}"
-        except Exception:
-            return None, f"CNN_BAD_OUTPUT: {out}"
-    except Exception as e:
-        return None, f"CNN_EXCEPTION: {e}"
 
 
 def submit_save_yy_data(
@@ -249,7 +221,7 @@ def submit_save_yy_data(
     if rand is None:
         rand = time.time() % 1  # 保持类似 rand=0.x 的形式
     save_url = f"{BASE}/mobile/save_yy_data.ashx?rand={rand}"
-    resp = http_post(session, save_url, data=form, timeout=20, log_request=log_request)
+    resp = http_post(session, save_url, data=form, timeout=20, log_request=log_request, max_retries=3)
     http_status = resp.status_code
 
     state = ""
@@ -317,50 +289,7 @@ def sd_to_timerange(sd: int) -> str:
     return f"{start:02d}:00-{end:02d}:00"
 
 
-def fetch_index_1_html(session: requests.Session) -> str:
-    """
-    场次表格页（含各格子 div id，如 20_1）
-    """
-    url = f"{BASE}/mobile/index_1.aspx"
-    r = http_get(session, url, timeout=20)
-    r.raise_for_status()
-    if not r.encoding or r.encoding.lower() in {"iso-8859-1", "ascii"}:
-        r.encoding = r.apparent_encoding
-    return r.text
 
-
-def parse_time_labels_from_index_1(html: str) -> dict:
-    """
-    从 index_1.aspx 页面解析 sd(时段编号) -> 文本时间段（如 07:00-08:00）
-    """
-    soup = BeautifulSoup(html, "html.parser")
-    # 左侧时间列是一个独立表格，里面 td 多为 “07:00-08:00”
-    labels = {}
-    # 粗略：找所有看起来像 “07:00-08:00” 的 td 文本，按出现顺序对应 sd=7..22
-    tds = [td.get_text(strip=True) for td in soup.find_all("td")]
-    times = [t for t in tds if re.match(r"^\d{2}:\d{2}\-\d{2}:\d{2}$", t)]
-    # 页面默认时段是 07-23（与你 README HOURS 一致），sd 也通常是 7..22
-    sd = 7
-    for t in times:
-        if sd > 22:
-            break
-        labels[str(sd)] = t
-        sd += 1
-    return labels
-
-
-def parse_court_labels_from_index_1(html: str) -> dict:
-    """
-    解析 场地编号(1/2/3/4...) -> 表头文本（如 “1号场”）
-    """
-    soup = BeautifulSoup(html, "html.parser")
-    ths = [th.get_text(strip=True) for th in soup.find_all("th")]
-    courts = {}
-    for t in ths:
-        m = re.match(r"^(\d+)\s*号场$", t)
-        if m:
-            courts[m.group(1)] = t
-    return courts
 
 
 def list_available_cells(
@@ -370,6 +299,7 @@ def list_available_cells(
     ydxmid: str,
     days: str,
     log_request: bool = True,
+    max_retries: int = 3,
 ) -> list:
     """
     调用 get_kyy_list.ashx 获取“可预约”列表，返回 [{select_id, sd, cdid, ygq}]
@@ -378,7 +308,7 @@ def list_available_cells(
     """
     url = f"{BASE}/mobile/get_kyy_list.ashx?rand={time.time() % 1}"
     payload = {"cgid": cgid, "ydxmid": ydxmid, "days": days}
-    j = http_post_json(session, url, data=payload, timeout=20, log_request=log_request)
+    j = http_post_json(session, url, data=payload, timeout=20, log_request=log_request, max_retries=max_retries)
     yysd_list = j.get("yysd_list") or []
     out = []
     for item in yysd_list:
@@ -405,13 +335,14 @@ def list_booked_cells(
     ydxmid: str,
     days: str,
     log_request: bool = True,
+    max_retries: int = 3,
 ) -> list:
     """
     调用 get_yyy_list.ashx 获取“已预约(橙色)”列表，返回 [{select_id, sd, cdid}]
     """
     url = f"{BASE}/mobile/get_yyy_list.ashx?rand={time.time() % 1}"
     payload = {"cgid": cgid, "ydxmid": ydxmid, "days": days}
-    j = http_post_json(session, url, data=payload, timeout=20, log_request=log_request)
+    j = http_post_json(session, url, data=payload, timeout=20, log_request=log_request, max_retries=max_retries)
     yysd_list = j.get("yysd_list") or []
     out = []
     for item in yysd_list:
@@ -423,20 +354,7 @@ def list_booked_cells(
     return out
 
 
-def parse_all_cell_ids_from_index_1(html: str) -> set:
-    """
-    从 index_1.aspx 解析所有格子的 DOM id（格式：sd_cdid，例如 20_1）。
-    页面里格子通常是 <div class="div_grey" id="7_1" ...>不可约</div>
-    """
-    soup = BeautifulSoup(html, "html.parser")
-    all_ids = set()
-    for div in soup.find_all("div"):
-        did = (div.get("id") or "").strip()
-        if not did:
-            continue
-        if re.match(r"^\d+_\d+$", did):
-            all_ids.add(did)
-    return all_ids
+
 
 
 def choose_best_select_id(
@@ -500,7 +418,7 @@ def attempt_one_cell(
     session.headers["Referer"] = cfg.referer
 
     # 打开填写页面（保持流程一致）
-    r = http_get(session, cfg.referer, timeout=20)
+    r = http_get(session, cfg.referer, timeout=20, max_retries=3)
     r.raise_for_status()
 
     # 生成验证码（只 GET 一次）
