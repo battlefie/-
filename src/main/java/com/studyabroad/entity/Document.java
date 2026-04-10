@@ -23,47 +23,42 @@ public class Document {
     @JoinColumn(name = "application_id", nullable = false)
     private Application application;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
-    private DocumentType documentType;
+    @Column(name = "file_path", length = 500)
+    private String filePath;
 
-    @Column(nullable = false, length = 200)
+    @Column(name = "file_name", length = 255)
     private String fileName;
 
-    @Column(nullable = false, length = 500)
-    private String filePath;
+    @Lob
+    @Column(name = "file_content", columnDefinition = "LONGBLOB")
+    private byte[] fileContent;
 
     @Column(name = "file_size")
     private Long fileSize;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "file_content_type", length = 100)
+    private String fileContentType;
 
-    @Column(name = "upload_time", nullable = false)
-    private LocalDateTime uploadTime;
+    @Column(name = "upload_date", nullable = false, updatable = false)
+    private LocalDateTime uploadDate;
 
-    @ManyToOne
-    @JoinColumn(name = "uploaded_by")
-    private User uploadedBy;
+    @Column(name = "create_time", nullable = false, updatable = false)
+    private LocalDateTime createTime;
+
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
 
     @PrePersist
     protected void onCreate() {
-        uploadTime = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        uploadDate = now;
+        createTime = now;
+        updateTime = now;
     }
 
-    /**
-     * 文档类型枚举
-     */
-    public enum DocumentType {
-        TRANSCRIPT,         // 成绩单
-        DIPLOMA,           // 毕业证
-        DEGREE,            // 学位证
-        LANGUAGE_TEST,     // 语言成绩
-        RECOMMENDATION,    // 推荐信
-        PERSONAL_STATEMENT, // 个人陈述
-        CV,                // 简历
-        PASSPORT,          // 护照
-        OTHER              // 其他
+    @PreUpdate
+    protected void onUpdate() {
+        updateTime = LocalDateTime.now();
     }
 }
 

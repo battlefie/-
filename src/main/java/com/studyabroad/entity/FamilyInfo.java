@@ -30,14 +30,14 @@ public class FamilyInfo {
     @Column(name = "father_birth_date")
     private LocalDate fatherBirthDate;
 
-    @Column(name = "father_phone", length = 20)
-    private String fatherPhone;
+    @Column(name = "father_contact", length = 50)
+    private String fatherContact;
 
-    @Column(name = "father_occupation", length = 100)
-    private String fatherOccupation;
+    @Column(name = "father_work_info", length = 200)
+    private String fatherWorkInfo;
 
-    @Column(name = "father_company", length = 200)
-    private String fatherCompany;
+    @Column(name = "father_education", length = 100)
+    private String fatherEducation;
 
     @Column(name = "father_income")
     private BigDecimal fatherIncome;
@@ -48,14 +48,14 @@ public class FamilyInfo {
     @Column(name = "mother_birth_date")
     private LocalDate motherBirthDate;
 
-    @Column(name = "mother_phone", length = 20)
-    private String motherPhone;
+    @Column(name = "mother_contact", length = 50)
+    private String motherContact;
 
-    @Column(name = "mother_occupation", length = 100)
-    private String motherOccupation;
+    @Column(name = "mother_work_info", length = 200)
+    private String motherWorkInfo;
 
-    @Column(name = "mother_company", length = 200)
-    private String motherCompany;
+    @Column(name = "mother_education", length = 100)
+    private String motherEducation;
 
     @Column(name = "mother_income")
     private BigDecimal motherIncome;
@@ -84,23 +84,8 @@ public class FamilyInfo {
     @Column(name = "total_assets")
     private BigDecimal totalAssets;
 
-    @Column(name = "family_address", length = 500)
-    private String familyAddress;
-
-    @Column(name = "family_size")
-    private Integer familySize;
-
-    @Column(name = "emergency_contact_name", length = 100)
-    private String emergencyContactName;
-
-    @Column(name = "emergency_contact_phone", length = 20)
-    private String emergencyContactPhone;
-
-    @Column(name = "emergency_contact_relation", length = 50)
-    private String emergencyContactRelation;
-
-    @Column(name = "notes", columnDefinition = "TEXT")
-    private String notes;
+    @Column(name = "siblings_info", columnDefinition = "TEXT")
+    private String siblingsInfo;
 
     @Column(name = "create_time", nullable = false, updatable = false)
     private LocalDateTime createTime;

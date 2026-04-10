@@ -186,8 +186,6 @@
         <div class="nav">
             <a href="/dashboard-simple.html" class="active">仪表盘</a>
             <a href="/students.html">学生管理</a>
-            <a href="/universities.html">大学信息</a>
-            <a href="/applications.html">申请管理</a>
             <a href="#" onclick="logout()">退出登录</a>
         </div>
     </div>
@@ -202,10 +200,6 @@
             <div class="stat-card">
                 <div class="number" id="studentCount">-</div>
                 <div class="label">学生总数</div>
-            </div>
-            <div class="stat-card">
-                <div class="number" id="universityCount">-</div>
-                <div class="label">大学数量</div>
             </div>
             <div class="stat-card">
                 <div class="number" id="applicationCount">-</div>
@@ -256,10 +250,6 @@
                 const studentsResponse = await fetch('/api/students', { headers });
                 const studentsData = await studentsResponse.json();
                 
-                // 获取大学数据
-                const universitiesResponse = await fetch('/api/universities', { headers });
-                const universitiesData = await universitiesResponse.json();
-                
                 // 获取申请数据
                 const applicationsResponse = await fetch('/api/applications', { headers });
                 const applicationsData = await applicationsResponse.json();
@@ -267,10 +257,6 @@
                 // 更新统计数据
                 if (studentsData.code === 200) {
                     document.getElementById('studentCount').textContent = studentsData.data.length;
-                }
-                
-                if (universitiesData.code === 200) {
-                    document.getElementById('universityCount').textContent = universitiesData.data.length;
                 }
                 
                 if (applicationsData.code === 200) {

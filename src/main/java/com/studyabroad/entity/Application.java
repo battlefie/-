@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 留学申请实体类
@@ -26,6 +28,12 @@ public class Application {
 
     @Column(name = "university_name", nullable = false, length = 200)
     private String universityName;
+
+    @Column(name = "university_email", length = 200)
+    private String universityEmail;
+
+    @Column(name = "university_email_password", length = 200)
+    private String universityEmailPassword;
 
     @Column(length = 100)
     private String country;
@@ -49,6 +57,9 @@ public class Application {
 
     @Column(name = "interview_date")
     private LocalDate interviewDate;
+
+    @Column(name = "fingerprint_collection_date")
+    private LocalDate fingerprintCollectionDate;
 
     @Column(name = "medical_exam_date")
     private LocalDate medicalExamDate;
@@ -82,8 +93,12 @@ public class Application {
     private User counselor;
 
     @ManyToOne
-    @JoinColumn(name = "writer_id", nullable = false)
+    @JoinColumn(name = "writer_id")
     private User writer;
+
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"application", "fileContent"}) // 避免序列化大文件和循环引用
+    private List<com.studyabroad.entity.Document> documents;
 
     @Column(name = "create_time", nullable = false, updatable = false)
     private LocalDateTime createTime;
@@ -118,7 +133,6 @@ public class Application {
      */
     public enum ApplicationStatus {
         DRAFT,          // 草稿
-        PENDING,        // 待处理
         SUBMITTED,      // 已提交
         UNDER_REVIEW,   // 审核中
         ACCEPTED,       // 已录取

@@ -2,11 +2,9 @@ package com.studyabroad.service;
 
 import com.studyabroad.entity.Application;
 import com.studyabroad.entity.Student;
-import com.studyabroad.entity.University;
 import com.studyabroad.entity.User;
 import com.studyabroad.repository.ApplicationRepository;
 import com.studyabroad.repository.StudentRepository;
-import com.studyabroad.repository.UniversityRepository;
 import com.studyabroad.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,35 +23,57 @@ import java.util.List;
 public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
-    private final UniversityRepository universityRepository;
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
+    private final PermissionService permissionService;
 
     public ApplicationService(ApplicationRepository applicationRepository, 
-                            UniversityRepository universityRepository,
                             UserRepository userRepository,
-                            StudentRepository studentRepository) {
+                            StudentRepository studentRepository,
+                            PermissionService permissionService) {
         this.applicationRepository = applicationRepository;
-        this.universityRepository = universityRepository;
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
+        this.permissionService = permissionService;
     }
 
     @Transactional
     public Application createApplication(Application application) {
-        // 检查学生信息是否存在
-        if (application.getStudent() != null && application.getStudent().getId() != null) {
-            Student student = studentRepository.findById(application.getStudent().getId()).orElse(null);
-            if (student != null) {
-                // 确认学生关联
+        if (application.getStudent() == null || application.getStudent().getId() == null) {
+            throw new RuntimeException("请先创建学生并选择申请人");
+        }
+
+        Student student = studentRepository.findById(application.getStudent().getId())
+                .orElseThrow(() -> new RuntimeException("申请人不存在，请先创建学生信息"));
+
                 application.setStudent(student);
-                
-                // 业务规则：申请的文案必须与学生的文案一致
-                // 如果学生有负责的文案，自动设置申请的文案为学生的文案
-                if (student.getWriter() != null) {
-                    application.setWriter(student.getWriter());
+
+        User currentUser = permissionService.getCurrentUser();
+        boolean isAdmin = permissionService.isAdmin();
+        boolean isCounselor = permissionService.isCounselor();
+        boolean isWriter = permissionService.isWriter();
+
+        if (!isAdmin) {
+            if (isWriter) {
+                if (student.getWriter() == null || currentUser == null ||
+                        !student.getWriter().getId().equals(currentUser.getId())) {
+                    throw new RuntimeException("只能为自己负责的学生创建申请");
                 }
+            } else if (isCounselor) {
+                if (student.getCounselor() == null || currentUser == null ||
+                        !student.getCounselor().getId().equals(currentUser.getId())) {
+                    throw new RuntimeException("只能为自己负责的学生创建申请");
+                }
+            } else {
+                throw new RuntimeException("没有权限创建申请");
             }
+        }
+
+        // 业务规则：申请的文案必须与学生的文案一致
+        if (student.getWriter() != null) {
+            application.setWriter(student.getWriter());
+        } else {
+            throw new RuntimeException("该学生尚未分配文案，无法创建申请");
         }
         
         // 检查咨询顾问信息是否存在
@@ -62,6 +82,8 @@ public class ApplicationService {
             if (counselor != null) {
                 application.setCounselor(counselor);
             }
+        } else if (student.getCounselor() != null) {
+            application.setCounselor(student.getCounselor());
         }
         
         // 如果学生没有文案，才允许手动设置文案（但通常应该先给学生分配文案）
@@ -93,6 +115,14 @@ public class ApplicationService {
 
     public List<Application> getApplicationsByUserId(Long userId) {
         return applicationRepository.findByStudentId(userId);
+    }
+
+    /**
+     * 分页获取指定学生的申请
+     */
+    public Page<Application> getApplicationsByUserId(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createTime").descending());
+        return applicationRepository.findByStudentId(userId, pageable);
     }
 
     public List<Application> getApplicationsByUniversityName(String universityName) {
@@ -138,7 +168,35 @@ public class ApplicationService {
     @Transactional
     public Application updateApplication(Long id, Application applicationDetails) {
         Application application = getApplicationById(id);
-        
+
+        User currentUser = permissionService.getCurrentUser();
+        boolean isAdmin = permissionService.isAdmin();
+        boolean isCounselor = permissionService.isCounselor();
+        boolean isWriter = permissionService.isWriter();
+
+        if (!isAdmin) {
+            if (isWriter) {
+                if (application.getStudent() == null || application.getStudent().getWriter() == null ||
+                        currentUser == null ||
+                        !application.getStudent().getWriter().getId().equals(currentUser.getId())) {
+                    throw new RuntimeException("没有权限修改此申请");
+                }
+            } else if (isCounselor) {
+                if (application.getStudent() == null || application.getStudent().getCounselor() == null ||
+                        currentUser == null ||
+                        !application.getStudent().getCounselor().getId().equals(currentUser.getId())) {
+                    throw new RuntimeException("没有权限修改此申请");
+                }
+            } else {
+                throw new RuntimeException("没有权限修改申请");
+            }
+        }
+
+        if (!isAdmin && applicationDetails.getStudent() != null && applicationDetails.getStudent().getId() != null &&
+                !applicationDetails.getStudent().getId().equals(application.getStudent().getId())) {
+            throw new RuntimeException("没有权限修改申请人");
+        }
+
         // 如果学生信息被更新，重新加载学生信息
         if (applicationDetails.getStudent() != null && applicationDetails.getStudent().getId() != null) {
             Student student = studentRepository.findById(applicationDetails.getStudent().getId()).orElse(null);
@@ -165,6 +223,8 @@ public class ApplicationService {
         if (applicationDetails.getStatus() != null) application.setStatus(applicationDetails.getStatus());
         if (applicationDetails.getApplicationDate() != null) application.setApplicationDate(applicationDetails.getApplicationDate());
         if (applicationDetails.getUniversityName() != null) application.setUniversityName(applicationDetails.getUniversityName());
+        if (applicationDetails.getUniversityEmail() != null) application.setUniversityEmail(applicationDetails.getUniversityEmail());
+        if (applicationDetails.getUniversityEmailPassword() != null) application.setUniversityEmailPassword(applicationDetails.getUniversityEmailPassword());
         if (applicationDetails.getCountry() != null) application.setCountry(applicationDetails.getCountry());
         if (applicationDetails.getNotes() != null) application.setNotes(applicationDetails.getNotes());
         if (applicationDetails.getCounselor() != null) application.setCounselor(applicationDetails.getCounselor());
@@ -174,6 +234,7 @@ public class ApplicationService {
         // 签证信息
         if (applicationDetails.getVisaSubmissionDate() != null) application.setVisaSubmissionDate(applicationDetails.getVisaSubmissionDate());
         if (applicationDetails.getInterviewDate() != null) application.setInterviewDate(applicationDetails.getInterviewDate());
+        if (applicationDetails.getFingerprintCollectionDate() != null) application.setFingerprintCollectionDate(applicationDetails.getFingerprintCollectionDate());
         if (applicationDetails.getMedicalExamDate() != null) application.setMedicalExamDate(applicationDetails.getMedicalExamDate());
         if (applicationDetails.getVisaApprovedDate() != null) application.setVisaApprovedDate(applicationDetails.getVisaApprovedDate());
         if (applicationDetails.getVisaRejectedDate() != null) application.setVisaRejectedDate(applicationDetails.getVisaRejectedDate());
@@ -219,7 +280,7 @@ public class ApplicationService {
         // 设置其他字段
         application.setMajor(request.getMajor());
         application.setDegreeType(Application.DegreeType.valueOf(request.getDegreeType()));
-        application.setStatus(Application.ApplicationStatus.PENDING);
+        application.setStatus(Application.ApplicationStatus.DRAFT);
         
         if (request.getApplicationDate() != null && !request.getApplicationDate().isEmpty()) {
             application.setApplicationDate(LocalDate.parse(request.getApplicationDate()));

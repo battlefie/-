@@ -31,6 +31,7 @@ public class StudentController {
     @PostMapping
     public ApiResponse<Student> createStudent(@RequestBody CreateStudentRequest request) {
         try {
+            // 只有管理员和顾问可以创建学生，文案不能创建
             if (!permissionService.isAdmin() && !permissionService.isCounselor()) {
                 return ApiResponse.error("没有权限创建学生");
             }
@@ -56,10 +57,17 @@ public class StudentController {
             Student student = studentService.getStudentById(id);
             
             // 检查权限
-            if (!permissionService.isAdmin() && permissionService.isCounselor()) {
+            if (!permissionService.isAdmin()) {
+                if (permissionService.isCounselor()) {
                 if (student.getCounselor() == null || 
                     !student.getCounselor().getId().equals(permissionService.getCurrentUser().getId())) {
                     return ApiResponse.error("没有权限查看此学生信息");
+                    }
+                } else if (permissionService.isWriter()) {
+                    if (student.getWriter() == null ||
+                        !student.getWriter().getId().equals(permissionService.getCurrentUser().getId())) {
+                        return ApiResponse.error("没有权限查看此学生信息");
+                    }
                 }
             }
             
@@ -107,6 +115,40 @@ public class StudentController {
                     students = studentService.getAllStudents();
                 }
                 return ApiResponse.success(students);
+            }
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 获取学生及其申请概览
+     */
+    @GetMapping("/overview")
+    public ApiResponse<?> getStudentOverview(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size) {
+        try {
+            // 如果提供了页码和大小，使用分页查询
+            if (page >= 0 && size > 0) {
+                Page<Student> studentPage = studentService.getStudentsWithApplications(name, page, size);
+                
+                // 构建分页响应
+                java.util.Map<String, Object> result = new java.util.HashMap<>();
+                result.put("content", studentPage.getContent());
+                result.put("totalElements", studentPage.getTotalElements());
+                result.put("totalPages", studentPage.getTotalPages());
+                result.put("currentPage", studentPage.getNumber());
+                result.put("pageSize", studentPage.getSize());
+                result.put("hasNext", studentPage.hasNext());
+                result.put("hasPrevious", studentPage.hasPrevious());
+                
+                return ApiResponse.success(result);
+            } else {
+                // 使用非分页查询（保持向后兼容）
+                List<Student> overview = studentService.getStudentsWithApplications(name);
+                return ApiResponse.success(overview);
             }
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());
@@ -194,6 +236,62 @@ public class StudentController {
         try {
             Student student = studentService.assignStudentToWriter(studentId, writerId);
             return ApiResponse.success("学生分配给文案成功", student);
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 高级搜索学生
+     */
+    @PostMapping("/advanced-search")
+    public ApiResponse<?> advancedSearch(@RequestBody java.util.Map<String, Object> searchParams,
+                                         @RequestParam(required = false, defaultValue = "0") int page,
+                                         @RequestParam(required = false, defaultValue = "10") int size) {
+        try {
+            String name = searchParams.get("name") != null ? searchParams.get("name").toString() : null;
+            String idCard = searchParams.get("idCard") != null ? searchParams.get("idCard").toString() : null;
+            String contact = searchParams.get("contact") != null ? searchParams.get("contact").toString() : null;
+            String gender = searchParams.get("gender") != null ? searchParams.get("gender").toString() : null;
+            String currentSchool = searchParams.get("currentSchool") != null ? searchParams.get("currentSchool").toString() : null;
+            String major = searchParams.get("major") != null ? searchParams.get("major").toString() : null;
+            String intendedCountry = searchParams.get("intendedCountry") != null ? searchParams.get("intendedCountry").toString() : null;
+            String status = searchParams.get("status") != null ? searchParams.get("status").toString() : null;
+            String fatherName = searchParams.get("fatherName") != null ? searchParams.get("fatherName").toString() : null;
+            String fatherContact = searchParams.get("fatherContact") != null ? searchParams.get("fatherContact").toString() : null;
+            String fatherWorkInfo = searchParams.get("fatherWorkInfo") != null ? searchParams.get("fatherWorkInfo").toString() : null;
+            String motherName = searchParams.get("motherName") != null ? searchParams.get("motherName").toString() : null;
+            String motherContact = searchParams.get("motherContact") != null ? searchParams.get("motherContact").toString() : null;
+            String motherWorkInfo = searchParams.get("motherWorkInfo") != null ? searchParams.get("motherWorkInfo").toString() : null;
+            
+            java.time.LocalDate contractDateStart = null;
+            java.time.LocalDate contractDateEnd = null;
+            if (searchParams.get("contractDateStart") != null) {
+                contractDateStart = java.time.LocalDate.parse(searchParams.get("contractDateStart").toString());
+            }
+            if (searchParams.get("contractDateEnd") != null) {
+                contractDateEnd = java.time.LocalDate.parse(searchParams.get("contractDateEnd").toString());
+            }
+            
+            Page<Student> studentPage = studentService.advancedSearch(
+                    name, idCard, contact, gender,
+                    currentSchool, major, intendedCountry, status,
+                    fatherName, fatherContact, fatherWorkInfo,
+                    motherName, motherContact, motherWorkInfo,
+                    contractDateStart, contractDateEnd,
+                    page, size);
+            
+            // 构建分页响应
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("content", studentPage.getContent());
+            result.put("totalElements", studentPage.getTotalElements());
+            result.put("totalPages", studentPage.getTotalPages());
+            result.put("currentPage", studentPage.getNumber());
+            result.put("pageSize", studentPage.getSize());
+            result.put("hasNext", studentPage.hasNext());
+            result.put("hasPrevious", studentPage.hasPrevious());
+            
+            return ApiResponse.success(result);
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());
         }

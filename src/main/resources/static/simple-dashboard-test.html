@@ -69,7 +69,6 @@
         <div>
             <button onclick="testLogin()">测试登录</button>
             <button onclick="testStudents()">测试学生API</button>
-            <button onclick="testUniversities()">测试大学API</button>
             <button onclick="testApplications()">测试申请API</button>
             <button onclick="loadAllData()">加载所有数据</button>
         </div>
@@ -80,10 +79,6 @@
             <div class="stat">
                 <div class="number" id="studentCount">-</div>
                 <div class="label">学生总数</div>
-            </div>
-            <div class="stat">
-                <div class="number" id="universityCount">-</div>
-                <div class="label">大学数量</div>
             </div>
             <div class="stat">
                 <div class="number" id="applicationCount">-</div>
@@ -164,37 +159,6 @@
             }
         }
         
-        async function testUniversities() {
-            if (!token) {
-                showStatus('请先登录', 'error');
-                return;
-            }
-            
-            try {
-                showStatus('正在测试大学API...', 'info');
-                
-                const response = await fetch('/api/universities', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                const data = await response.json();
-                console.log('大学API响应:', data);
-                
-                if (data.code === 200) {
-                    document.getElementById('universityCount').textContent = data.data.length;
-                    showStatus('大学API测试成功！获取到 ' + data.data.length + ' 个大学', 'success');
-                } else {
-                    showStatus('大学API失败: ' + data.message, 'error');
-                }
-            } catch (error) {
-                showStatus('大学API错误: ' + error.message, 'error');
-                console.error('大学API错误:', error);
-            }
-        }
-        
         async function testApplications() {
             if (!token) {
                 showStatus('请先登录', 'error');
@@ -230,7 +194,6 @@
             await testLogin();
             if (token) {
                 await testStudents();
-                await testUniversities();
                 await testApplications();
                 showStatus('所有数据加载完成！', 'success');
             }

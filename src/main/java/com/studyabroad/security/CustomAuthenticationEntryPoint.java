@@ -29,10 +29,10 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                                requestPath.equals("/") || 
                                requestPath.equals("/dashboard") ||
                                requestPath.equals("/students") ||
-                               requestPath.equals("/universities") ||
                                requestPath.equals("/applications") ||
                                requestPath.equals("/consultation-clients") ||
-                               requestPath.equals("/advanced-search");
+                               requestPath.equals("/advanced-search") ||
+                               requestPath.equals("/conversion-rate");
         
         if (isHtmlRequest) {
             // 对于HTML页面请求，返回401状态码，让前端JavaScript处理跳转

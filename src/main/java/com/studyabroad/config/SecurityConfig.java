@@ -13,8 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -47,23 +45,23 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/reset-password").permitAll()
-                .requestMatchers("/api/auth/register").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/api/auth/register").hasAuthority("ROLE_SUPER_ADMIN")
                 .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/login.html", "/register.html", "/forgot-password.html", "/index.html", "/").permitAll()
-                .requestMatchers("/dashboard.html", "/students.html", "/universities.html", "/applications.html",
-                                 "/consultation-clients.html", "/advanced-search.html").permitAll()
+                .requestMatchers("/dashboard.html", "/students.html", "/applications.html",
+                                 "/consultation-clients.html", "/advanced-search.html", "/user-management.html", "/conversion-rate.html").permitAll()
                 // 管理员可以访问所有API
-                .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
-                // 大学管理：管理员、咨询顾问和文案可访问
-                .requestMatchers("/api/universities/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_COUNSELOR", "ROLE_WRITER")
-                // 申请管理：管理员和文案可访问
-                .requestMatchers("/api/applications/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_WRITER")
-                // 学生相关API：管理员可以访问所有，咨询顾问和文案只能访问自己的学生
-                .requestMatchers("/api/students/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_COUNSELOR", "ROLE_WRITER")
-                // 用户相关API：所有已认证用户可访问
-                .requestMatchers("/api/users/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_COUNSELOR", "ROLE_WRITER")
-                // 咨询客户管理：管理员和咨询顾问可访问
-                .requestMatchers("/api/consultation-clients/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_COUNSELOR")
+                .requestMatchers("/api/admin/**").hasAuthority("ROLE_SUPER_ADMIN")
+                // 申请管理：超级管理员、普通管理员、咨询顾问以及文案可访问
+                .requestMatchers("/api/applications/**").hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_COUNSELOR", "ROLE_WRITER")
+                // 学生相关API：超级管理员、普通管理员、咨询顾问和文案可访问（服务层做细粒度控制）
+                .requestMatchers("/api/students/**").hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_COUNSELOR", "ROLE_WRITER")
+                // 用户相关API：超级管理员、普通管理员、咨询顾问和文案可访问（写操作由服务层限制）
+                .requestMatchers("/api/users/**").hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_COUNSELOR", "ROLE_WRITER")
+                // 咨询客户管理：超级管理员、普通管理员、咨询顾问和文案可访问（服务层做细粒度控制）
+                .requestMatchers("/api/consultation-clients/**").hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_COUNSELOR", "ROLE_WRITER")
+                // 转化率统计：只有超级管理员可以访问
+                .requestMatchers("/api/conversion-rate/**").hasAuthority("ROLE_SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex

@@ -105,8 +105,6 @@
             <ul class="nav-links">
                 <li><a href="/dashboard.html">仪表盘</a></li>
                 <li><a href="/students.html">学生管理</a></li>
-                <li><a href="/universities.html">大学信息</a></li>
-                <li><a href="/applications.html">申请管理</a></li>
                 <li><a href="/advanced-search.html" style="color: #667eea; font-weight: bold;">🔍 高级搜索</a></li>
                 <li><a href="#" onclick="logout()">退出登录</a></li>
             </ul>
@@ -182,20 +180,20 @@
                                 <input type="text" id="motherName" placeholder="请输入母亲姓名">
                             </div>
                             <div class="form-group">
-                                <label>父亲手机号</label>
-                                <input type="text" id="fatherPhone" placeholder="请输入手机号">
+                                <label>父亲联系方式</label>
+                                <input type="text" id="fatherContact" placeholder="请输入联系方式">
                             </div>
                             <div class="form-group">
-                                <label>母亲手机号</label>
-                                <input type="text" id="motherPhone" placeholder="请输入手机号">
+                                <label>母亲联系方式</label>
+                                <input type="text" id="motherContact" placeholder="请输入联系方式">
                             </div>
                             <div class="form-group">
-                                <label>父亲工作单位</label>
-                                <input type="text" id="fatherCompany" placeholder="请输入工作单位">
+                                <label>父亲工作单位/职务</label>
+                                <input type="text" id="fatherWorkInfo" placeholder="请输入单位或职务">
                             </div>
                             <div class="form-group">
-                                <label>母亲工作单位</label>
-                                <input type="text" id="motherCompany" placeholder="请输入工作单位">
+                                <label>母亲工作单位/职务</label>
+                                <input type="text" id="motherWorkInfo" placeholder="请输入单位或职务">
                             </div>
                             <div class="form-group">
                                 <label>申请国家</label>
@@ -266,10 +264,10 @@
                 homeAddress: document.getElementById('homeAddress').value.trim(),
                 fatherName: document.getElementById('fatherName').value.trim(),
                 motherName: document.getElementById('motherName').value.trim(),
-                fatherPhone: document.getElementById('fatherPhone').value.trim(),
-                motherPhone: document.getElementById('motherPhone').value.trim(),
-                fatherCompany: document.getElementById('fatherCompany').value.trim(),
-                motherCompany: document.getElementById('motherCompany').value.trim(),
+                fatherContact: document.getElementById('fatherContact').value.trim(),
+                motherContact: document.getElementById('motherContact').value.trim(),
+                fatherWorkInfo: document.getElementById('fatherWorkInfo').value.trim(),
+                motherWorkInfo: document.getElementById('motherWorkInfo').value.trim(),
                 targetCountry: document.getElementById('targetCountry').value.trim(),
                 targetUniversity: document.getElementById('targetUniversity').value.trim(),
                 counselor: document.getElementById('counselor').value,
@@ -298,10 +296,10 @@
                             const family = familyData.data;
                             if (criteria.fatherName && !family.fatherName?.includes(criteria.fatherName)) continue;
                             if (criteria.motherName && !family.motherName?.includes(criteria.motherName)) continue;
-                            if (criteria.fatherPhone && !family.fatherPhone?.includes(criteria.fatherPhone)) continue;
-                            if (criteria.motherPhone && !family.motherPhone?.includes(criteria.motherPhone)) continue;
-                            if (criteria.fatherCompany && !family.fatherCompany?.includes(criteria.fatherCompany)) continue;
-                            if (criteria.motherCompany && !family.motherCompany?.includes(criteria.motherCompany)) continue;
+                            if (criteria.fatherContact && !family.fatherContact?.includes(criteria.fatherContact)) continue;
+                            if (criteria.motherContact && !family.motherContact?.includes(criteria.motherContact)) continue;
+                            if (criteria.fatherWorkInfo && !family.fatherWorkInfo?.includes(criteria.fatherWorkInfo)) continue;
+                            if (criteria.motherWorkInfo && !family.motherWorkInfo?.includes(criteria.motherWorkInfo)) continue;
                             results.push({ type: 'student', data: { ...student, family } });
                         } else {
                             results.push({ type: 'student', data: student });
@@ -340,7 +338,7 @@
                             ${s.family ? `
                                 <div><strong>父亲:</strong> ${s.family.fatherName || 'N/A'}</div>
                                 <div><strong>母亲:</strong> ${s.family.motherName || 'N/A'}</div>
-                                <div><strong>父亲单位:</strong> ${s.family.fatherCompany || 'N/A'}</div>
+                                <div><strong>父亲单位:</strong> ${s.family.fatherWorkInfo || 'N/A'}</div>
                             ` : ''}
                         </div>
                     </div>

@@ -48,14 +48,14 @@ public class FamilyInfoService {
 
         // 更新字段
         if (familyInfoDetails.getFatherName() != null) familyInfo.setFatherName(familyInfoDetails.getFatherName());
-        if (familyInfoDetails.getFatherPhone() != null) familyInfo.setFatherPhone(familyInfoDetails.getFatherPhone());
-        if (familyInfoDetails.getFatherOccupation() != null) familyInfo.setFatherOccupation(familyInfoDetails.getFatherOccupation());
-        if (familyInfoDetails.getFatherCompany() != null) familyInfo.setFatherCompany(familyInfoDetails.getFatherCompany());
+        if (familyInfoDetails.getFatherContact() != null) familyInfo.setFatherContact(familyInfoDetails.getFatherContact());
+        if (familyInfoDetails.getFatherWorkInfo() != null) familyInfo.setFatherWorkInfo(familyInfoDetails.getFatherWorkInfo());
+        if (familyInfoDetails.getFatherEducation() != null) familyInfo.setFatherEducation(familyInfoDetails.getFatherEducation());
 
         if (familyInfoDetails.getMotherName() != null) familyInfo.setMotherName(familyInfoDetails.getMotherName());
-        if (familyInfoDetails.getMotherPhone() != null) familyInfo.setMotherPhone(familyInfoDetails.getMotherPhone());
-        if (familyInfoDetails.getMotherOccupation() != null) familyInfo.setMotherOccupation(familyInfoDetails.getMotherOccupation());
-        if (familyInfoDetails.getMotherCompany() != null) familyInfo.setMotherCompany(familyInfoDetails.getMotherCompany());
+        if (familyInfoDetails.getMotherContact() != null) familyInfo.setMotherContact(familyInfoDetails.getMotherContact());
+        if (familyInfoDetails.getMotherWorkInfo() != null) familyInfo.setMotherWorkInfo(familyInfoDetails.getMotherWorkInfo());
+        if (familyInfoDetails.getMotherEducation() != null) familyInfo.setMotherEducation(familyInfoDetails.getMotherEducation());
 
         if (familyInfoDetails.getAnnualIncome() != null) familyInfo.setAnnualIncome(familyInfoDetails.getAnnualIncome());
         if (familyInfoDetails.getRealEstateValue() != null) familyInfo.setRealEstateValue(familyInfoDetails.getRealEstateValue());
@@ -65,12 +65,7 @@ public class FamilyInfoService {
         if (familyInfoDetails.getDepositValue() != null) familyInfo.setDepositValue(familyInfoDetails.getDepositValue());
         if (familyInfoDetails.getOtherInvestmentValue() != null) familyInfo.setOtherInvestmentValue(familyInfoDetails.getOtherInvestmentValue());
 
-        if (familyInfoDetails.getFamilyAddress() != null) familyInfo.setFamilyAddress(familyInfoDetails.getFamilyAddress());
-        if (familyInfoDetails.getFamilySize() != null) familyInfo.setFamilySize(familyInfoDetails.getFamilySize());
-        if (familyInfoDetails.getEmergencyContactName() != null) familyInfo.setEmergencyContactName(familyInfoDetails.getEmergencyContactName());
-        if (familyInfoDetails.getEmergencyContactPhone() != null) familyInfo.setEmergencyContactPhone(familyInfoDetails.getEmergencyContactPhone());
-        if (familyInfoDetails.getEmergencyContactRelation() != null) familyInfo.setEmergencyContactRelation(familyInfoDetails.getEmergencyContactRelation());
-        if (familyInfoDetails.getNotes() != null) familyInfo.setNotes(familyInfoDetails.getNotes());
+        if (familyInfoDetails.getSiblingsInfo() != null) familyInfo.setSiblingsInfo(familyInfoDetails.getSiblingsInfo());
 
         // 自动计算总资产
         familyInfo.calculateTotalAssets();

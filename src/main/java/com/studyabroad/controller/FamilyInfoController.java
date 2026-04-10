@@ -4,9 +4,7 @@ import com.studyabroad.dto.ApiResponse;
 import com.studyabroad.dto.CreateFamilyInfoRequest;
 import com.studyabroad.entity.FamilyInfo;
 import com.studyabroad.entity.Student;
-import com.studyabroad.entity.User;
 import com.studyabroad.repository.StudentRepository;
-import com.studyabroad.repository.UserRepository;
 import com.studyabroad.service.FamilyInfoService;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,12 +19,10 @@ import java.util.Optional;
 public class FamilyInfoController {
 
     private final FamilyInfoService familyInfoService;
-    private final UserRepository userRepository;
     private final StudentRepository studentRepository;
 
-    public FamilyInfoController(FamilyInfoService familyInfoService, UserRepository userRepository, StudentRepository studentRepository) {
+    public FamilyInfoController(FamilyInfoService familyInfoService, StudentRepository studentRepository) {
         this.familyInfoService = familyInfoService;
-        this.userRepository = userRepository;
         this.studentRepository = studentRepository;
     }
 
@@ -113,17 +109,17 @@ public class FamilyInfoController {
             // 设置父亲信息
             familyInfo.setFatherName(request.getFatherName());
             familyInfo.setFatherBirthDate(request.getFatherBirthDate());
-            familyInfo.setFatherPhone(request.getFatherPhone());
-            familyInfo.setFatherOccupation(request.getFatherOccupation());
-            familyInfo.setFatherCompany(request.getFatherCompany());
+            familyInfo.setFatherContact(request.getFatherContact());
+            familyInfo.setFatherWorkInfo(request.getFatherWorkInfo());
+            familyInfo.setFatherEducation(request.getFatherEducation());
             familyInfo.setFatherIncome(request.getFatherIncome());
             
             // 设置母亲信息
             familyInfo.setMotherName(request.getMotherName());
             familyInfo.setMotherBirthDate(request.getMotherBirthDate());
-            familyInfo.setMotherPhone(request.getMotherPhone());
-            familyInfo.setMotherOccupation(request.getMotherOccupation());
-            familyInfo.setMotherCompany(request.getMotherCompany());
+            familyInfo.setMotherContact(request.getMotherContact());
+            familyInfo.setMotherWorkInfo(request.getMotherWorkInfo());
+            familyInfo.setMotherEducation(request.getMotherEducation());
             familyInfo.setMotherIncome(request.getMotherIncome());
             
             // 设置资产信息
@@ -135,13 +131,8 @@ public class FamilyInfoController {
             familyInfo.setDepositValue(request.getDepositValue());
             familyInfo.setOtherInvestmentValue(request.getOtherInvestmentValue());
             
-            // 设置其他信息
-            familyInfo.setFamilyAddress(request.getFamilyAddress());
-            familyInfo.setFamilySize(request.getFamilySize());
-            familyInfo.setEmergencyContactName(request.getEmergencyContactName());
-            familyInfo.setEmergencyContactPhone(request.getEmergencyContactPhone());
-            familyInfo.setEmergencyContactRelation(request.getEmergencyContactRelation());
-            familyInfo.setNotes(request.getNotes());
+            // 兄弟姐妹信息
+            familyInfo.setSiblingsInfo(request.getSiblingsInfo());
             
             FamilyInfo createdFamilyInfo = familyInfoService.createFamilyInfo(familyInfo);
             return ApiResponse.success("家庭信息创建成功", createdFamilyInfo);
@@ -174,17 +165,17 @@ public class FamilyInfoController {
             // 更新父亲信息
             if (request.getFatherName() != null) familyInfo.setFatherName(request.getFatherName());
             if (request.getFatherBirthDate() != null) familyInfo.setFatherBirthDate(request.getFatherBirthDate());
-            if (request.getFatherPhone() != null) familyInfo.setFatherPhone(request.getFatherPhone());
-            if (request.getFatherOccupation() != null) familyInfo.setFatherOccupation(request.getFatherOccupation());
-            if (request.getFatherCompany() != null) familyInfo.setFatherCompany(request.getFatherCompany());
+            if (request.getFatherContact() != null) familyInfo.setFatherContact(request.getFatherContact());
+            if (request.getFatherWorkInfo() != null) familyInfo.setFatherWorkInfo(request.getFatherWorkInfo());
+            if (request.getFatherEducation() != null) familyInfo.setFatherEducation(request.getFatherEducation());
             if (request.getFatherIncome() != null) familyInfo.setFatherIncome(request.getFatherIncome());
             
             // 更新母亲信息
             if (request.getMotherName() != null) familyInfo.setMotherName(request.getMotherName());
             if (request.getMotherBirthDate() != null) familyInfo.setMotherBirthDate(request.getMotherBirthDate());
-            if (request.getMotherPhone() != null) familyInfo.setMotherPhone(request.getMotherPhone());
-            if (request.getMotherOccupation() != null) familyInfo.setMotherOccupation(request.getMotherOccupation());
-            if (request.getMotherCompany() != null) familyInfo.setMotherCompany(request.getMotherCompany());
+            if (request.getMotherContact() != null) familyInfo.setMotherContact(request.getMotherContact());
+            if (request.getMotherWorkInfo() != null) familyInfo.setMotherWorkInfo(request.getMotherWorkInfo());
+            if (request.getMotherEducation() != null) familyInfo.setMotherEducation(request.getMotherEducation());
             if (request.getMotherIncome() != null) familyInfo.setMotherIncome(request.getMotherIncome());
             
             // 更新资产信息
@@ -196,13 +187,7 @@ public class FamilyInfoController {
             if (request.getDepositValue() != null) familyInfo.setDepositValue(request.getDepositValue());
             if (request.getOtherInvestmentValue() != null) familyInfo.setOtherInvestmentValue(request.getOtherInvestmentValue());
             
-            // 更新其他信息
-            if (request.getFamilyAddress() != null) familyInfo.setFamilyAddress(request.getFamilyAddress());
-            if (request.getFamilySize() != null) familyInfo.setFamilySize(request.getFamilySize());
-            if (request.getEmergencyContactName() != null) familyInfo.setEmergencyContactName(request.getEmergencyContactName());
-            if (request.getEmergencyContactPhone() != null) familyInfo.setEmergencyContactPhone(request.getEmergencyContactPhone());
-            if (request.getEmergencyContactRelation() != null) familyInfo.setEmergencyContactRelation(request.getEmergencyContactRelation());
-            if (request.getNotes() != null) familyInfo.setNotes(request.getNotes());
+            if (request.getSiblingsInfo() != null) familyInfo.setSiblingsInfo(request.getSiblingsInfo());
             
             FamilyInfo updatedFamilyInfo = familyInfoService.updateFamilyInfo(id, familyInfo);
             System.out.println("更新后的家庭信息: " + updatedFamilyInfo);

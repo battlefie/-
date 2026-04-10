@@ -29,9 +29,9 @@ public class AuthController {
     @PostMapping("/register")
     public ApiResponse<Map<String, Object>> register(@RequestBody RegisterRequest request, Authentication authentication) {
         try {
-            // 检查权限：只有管理员可以注册账号
-            if (authentication == null || !permissionService.isAdmin()) {
-                return ApiResponse.error("只有管理员可以注册账号");
+            // 检查权限：只有超级管理员可以注册账号
+            if (authentication == null || !permissionService.isSuperAdmin()) {
+                return ApiResponse.error("只有超级管理员可以注册账号");
             }
             
             Map<String, Object> result = userService.register(request);

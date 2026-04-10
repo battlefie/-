@@ -7,50 +7,154 @@
     <link rel="stylesheet" href="/css/style.css">
     <style>
         .client-card {
-            background: white;
+            background: #f5f5f5;
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+            display: flex;
+            gap: 16px;
+            align-items: center;
             cursor: pointer;
             transition: all 0.3s ease;
         }
         .client-card:hover {
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-        .client-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .client-name {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #333;
-        }
-        .status-badge {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
         }
         .client-info {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            font-size: 0.9rem;
-            color: #666;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            min-width: 0;
         }
         .info-item {
             display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-shrink: 0;
+            overflow: hidden;
             align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        /* 姓名 - 短一点 */
+        .info-item:nth-child(1) {
+            flex: 0 0 70px;
+            min-width: 70px;
+            max-width: 70px;
+        }
+        /* 性别 - 短一点 */
+        .info-item:nth-child(2) {
+            flex: 0 0 50px;
+            min-width: 50px;
+            max-width: 50px;
+        }
+        /* 出生日期 - 宽一点 */
+        .info-item:nth-child(3) {
+            flex: 0 0 140px;
+            min-width: 140px;
+            max-width: 140px;
+        }
+        /* 联系方式 - 宽一点，可以换行 */
+        .info-item:nth-child(4) {
+            flex: 0 0 280px;
+            min-width: 280px;
+            max-width: 280px;
+        }
+        /* 咨询时间 */
+        .info-item:nth-child(5) {
+            flex: 0 0 140px;
+            min-width: 140px;
+            max-width: 140px;
+        }
+        /* 意向国家 */
+        .info-item:nth-child(6) {
+            flex: 0 0 100px;
+            min-width: 100px;
+            max-width: 100px;
+        }
+        /* 渠道来源 */
+        .info-item:nth-child(7) {
+            flex: 0 0 120px;
+            min-width: 120px;
+            max-width: 120px;
+        }
+        /* 客户状态 */
+        .info-item:nth-child(8) {
+            flex: 0 0 100px;
+            min-width: 100px;
+            max-width: 100px;
         }
         .info-label {
+            font-size: 12px;
+            color: #999;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+            font-weight: normal;
+            text-align: center;
+            width: 100%;
+        }
+        .info-item span:not(.info-label) {
+            font-size: 14px;
+            color: #000;
             font-weight: bold;
-            margin-right: 8px;
-            min-width: 80px;
+            width: 100%;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            text-align: center;
+        }
+        /* 联系方式字段允许换行 */
+        .info-item:nth-child(4) span:not(.info-label) {
+            white-space: normal;
+            line-height: 1.4;
+        }
+        /* 其他字段不换行 */
+        .info-item:not(:nth-child(4)) span:not(.info-label) {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .client-actions {
+            width: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .client-actions .btn {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 13px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .client-actions .btn-info {
+            background-color: #20b2aa;
+            color: white;
+        }
+        .client-actions .btn-info:hover {
+            background-color: #1a9b94;
+        }
+        .client-actions .btn:not(.btn-info):not(.btn-danger) {
+            background-color: #667eea;
+            color: white;
+        }
+        .client-actions .btn:not(.btn-info):not(.btn-danger):hover {
+            background-color: #5568d3;
+        }
+        .client-actions .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .client-actions .btn-danger:hover {
+            background-color: #c82333;
         }
         .modal-content {
             max-width: 900px;
@@ -66,8 +170,49 @@
             gap: 15px;
             margin-bottom: 15px;
         }
+        .info-grid {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .info-grid.columns-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+            color: #333;
+            font-size: 13px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+        @media (max-width: 1200px) {
+            .info-grid.columns-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .info-grid.columns-4 {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -77,9 +222,8 @@
             <div class="logo">🎓 留学管理系统</div>
             <ul class="nav-links">
                 <li><a href="/dashboard.html">仪表盘</a></li>
-                <li><a href="/students.html">学生管理</a></li>
-                <li><a href="/universities.html">大学信息</a></li>
-                <li><a href="/applications.html">申请管理</a></li>
+                <li><a href="/consultation-clients.html">咨询客户管理</a></li>
+                <li><a href="#" onclick="showAdvancedSearch(); return false;" style="color: #667eea; font-weight: bold;">🔍 高级搜索</a></li>
                 <li><a href="#" onclick="logout()">退出登录</a></li>
             </ul>
         </div>
@@ -98,7 +242,91 @@
                 <div id="clientsList">
                     <p style="text-align: center; color: #999;">加载中...</p>
                 </div>
+                <div id="pagination" style="margin-top: 20px; text-align: center; padding: 15px; border-top: 1px solid #e1e5e9;"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- 高级搜索模态框 -->
+    <div id="advancedSearchModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" onclick="closeAdvancedSearchModal()">&times;</span>
+            <h2>🔍 高级搜索</h2>
+            <form id="advancedSearchForm">
+                <!-- 客户信息搜索 -->
+                <div class="info-section">
+                    <h3>📋 客户信息</h3>
+                    <div class="info-grid columns-4" style="gap: 12px;">
+                        <div class="form-group">
+                            <label>姓名</label>
+                            <input type="text" id="searchName" name="name" placeholder="客户姓名">
+                        </div>
+                        <div class="form-group">
+                            <label>身份证号</label>
+                            <input type="text" id="searchIdCard" name="idCard" placeholder="身份证号">
+                        </div>
+                        <div class="form-group">
+                            <label>联系方式</label>
+                            <input type="text" id="searchContact" name="contact" placeholder="手机/邮箱/微信">
+                        </div>
+                        <div class="form-group">
+                            <label>性别</label>
+                            <select id="searchGender" name="gender">
+                                <option value="">全部</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>现就读学校</label>
+                            <input type="text" id="searchCurrentSchool" name="currentSchool" placeholder="学校名称">
+                        </div>
+                        <div class="form-group">
+                            <label>专业</label>
+                            <input type="text" id="searchMajor" name="major" placeholder="专业名称">
+                        </div>
+                        <div class="form-group">
+                            <label>意向国家</label>
+                            <input type="text" id="searchIntendedCountry" name="intendedCountry" placeholder="例如：美国">
+                        </div>
+                        <div class="form-group">
+                            <label>渠道来源</label>
+                            <input type="text" id="searchChannelSource" name="channelSource" placeholder="渠道来源">
+                        </div>
+                        <div class="form-group">
+                            <label>客户状态</label>
+                            <select id="searchStatus" name="status">
+                                <option value="">全部</option>
+                                <option value="潜在客户">潜在客户</option>
+                                <option value="意向客户">意向客户</option>
+                                <option value="签约客户">签约客户</option>
+                                <option value="已流失">已流失</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 咨询时间搜索 -->
+                <div class="info-section">
+                    <h3>📅 咨询时间</h3>
+                    <div class="info-grid columns-4" style="gap: 12px;">
+                        <div class="form-group">
+                            <label>开始日期</label>
+                            <input type="date" id="searchConsultationDateStart" name="consultationDateStart">
+                        </div>
+                        <div class="form-group">
+                            <label>结束日期</label>
+                            <input type="date" id="searchConsultationDateEnd" name="consultationDateEnd">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeAdvancedSearchModal()">取消</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetAdvancedSearch()">重置</button>
+                    <button type="submit" class="btn">搜索</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -110,26 +338,44 @@
             <form id="clientForm">
                 <input type="hidden" id="clientId">
                 
+                <!-- 客户信息概览 -->
                 <div class="form-section">
-                    <h4 class="section-title">基本信息</h4>
-                    <div class="form-row">
+                    <h4 class="section-title">📋 客户信息概览</h4>
+                    <!-- 第一行：姓名、性别、出生日期、身份证号 -->
+                    <div class="info-grid columns-4">
                         <div class="form-group">
                             <label for="name">姓名 *</label>
                             <input type="text" id="name" required>
                         </div>
                         <div class="form-group">
-                            <label for="contactPhone">联系电话</label>
-                            <input type="text" id="contactPhone">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
                             <label for="gender">性别</label>
                             <select id="gender">
-                                <option value="">请选择</option>
                                 <option value="男">男</option>
                                 <option value="女">女</option>
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="birthDate">出生日期</label>
+                            <input type="date" id="birthDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="idCard">身份证号</label>
+                            <input type="text" id="idCard">
+                        </div>
+                    </div>
+                    <!-- 第二行：意向国家、咨询日期、渠道来源、客户状态 -->
+                    <div class="info-grid columns-4">
+                        <div class="form-group">
+                            <label for="intendedCountry">意向国家</label>
+                            <input type="text" id="intendedCountry" placeholder="例如：美国">
+                        </div>
+                        <div class="form-group">
+                            <label for="consultationDate">咨询日期</label>
+                            <input type="date" id="consultationDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="channelSource">渠道来源</label>
+                            <input type="text" id="channelSource" placeholder="如：线上、朋友介绍等">
                         </div>
                         <div class="form-group">
                             <label for="status">客户状态</label>
@@ -141,54 +387,19 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="consultationDate">咨询日期</label>
-                            <input type="date" id="consultationDate">
+                    <!-- 第三行：联系方式、家庭住址（各占两列） -->
+                    <div class="info-grid columns-4">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="contactInfo">联系方式</label>
+                            <input type="text" id="contactInfo" placeholder="例如：13800138001 / email@example.com / wechat_id">
                         </div>
-                        <div class="form-group">
-                            <label for="channel">渠道来源</label>
-                            <input type="text" id="channel" placeholder="如：线上、朋友介绍等">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">邮箱</label>
-                        <input type="email" id="email">
-                    </div>
-                    <div class="form-group">
-                        <label for="homeAddress">家庭住址</label>
-                        <input type="text" id="homeAddress">
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h4 class="section-title">留学意向</h4>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="targetCountry">意向国家</label>
-                            <input type="text" id="targetCountry" placeholder="如：美国、英国等">
-                        </div>
-                        <div class="form-group">
-                            <label for="targetDegree">意向学位</label>
-                            <select id="targetDegree">
-                                <option value="">请选择</option>
-                                <option value="JUNIOR_HIGH">初中</option>
-                                <option value="HIGH_SCHOOL">高中</option>
-                                <option value="BACHELOR">本科</option>
-                                <option value="MASTER">硕士</option>
-                                <option value="PHD">博士</option>
-                            </select>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="address">家庭住址</label>
+                            <input type="text" id="address">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="graduationDate">毕业时间</label>
-                        <input type="date" id="graduationDate">
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h4 class="section-title">学术背景</h4>
-                    <div class="form-row">
+                    <!-- 第四行：现就读学校、专业、GPA、语言/标化成绩 -->
+                    <div class="info-grid columns-4">
                         <div class="form-group">
                             <label for="currentSchool">现就读学校</label>
                             <input type="text" id="currentSchool">
@@ -197,10 +408,43 @@
                             <label for="major">专业</label>
                             <input type="text" id="major">
                         </div>
+                        <div class="form-group">
+                            <label for="gpa">GPA</label>
+                            <input type="text" id="gpa">
+                        </div>
+                        <div class="form-group">
+                            <label for="languageScores">语言/标化成绩</label>
+                            <input type="text" id="languageScores" placeholder="例如：托福 115 / 雅思 8.5">
+                        </div>
+                    </div>
+                    <!-- 第五行：入学时间、负责咨询顾问、负责文案 -->
+                    <div class="info-grid columns-4">
+                        <div class="form-group">
+                            <label for="enrollmentDate">入学时间</label>
+                            <input type="date" id="enrollmentDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="counselorId">负责咨询顾问</label>
+                            <select id="counselorId">
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="writerId">负责文案</label>
+                            <select id="writerId">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4 class="section-title">🏆 个人成就</h4>
+                    <div class="form-group">
+                        <label for="awards">获奖情况</label>
+                        <textarea id="awards" rows="3" placeholder="请输入获奖情况"></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="englishScore">英语成绩</label>
-                        <input type="text" id="englishScore" placeholder="如：TOEFL 100, IELTS 7.0">
+                        <label for="experiences">个人经历</label>
+                        <textarea id="experiences" rows="3" placeholder="请输入实习经历等"></textarea>
                     </div>
                 </div>
 
@@ -229,7 +473,7 @@
 
     <!-- 查看详情模态框 -->
     <div id="viewModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
             <span class="close" onclick="closeViewModal()">&times;</span>
             <h2>客户详情</h2>
             <div id="viewContent"></div>
@@ -245,22 +489,53 @@
         let clients = [];
         let currentPage = 0;
         const pageSize = 10;
+        let paginationData = { currentPage: 0, totalPages: 0, totalElements: 0, pageSize: 10 };
 
         async function loadClients(page = 0) {
             try {
+                currentPage = page;
                 const data = await apiRequest(`/consultation-clients?page=${page}&size=${pageSize}`);
+                console.log('API返回数据:', data);
                 if (data.code === 200) {
-                    if (data.data.content) {
-                        clients = data.data.content;
+                    if (data.data && data.data.content) {
+                        // 分页数据
+                        clients = Array.isArray(data.data.content) ? data.data.content : [];
+                        paginationData = {
+                            currentPage: data.data.number !== undefined ? data.data.number : page,
+                            totalPages: data.data.totalPages || 1,
+                            totalElements: data.data.totalElements || clients.length,
+                            pageSize: data.data.size || pageSize
+                        };
                         displayClients(clients);
-                    } else {
+                        displayPagination();
+                    } else if (Array.isArray(data.data)) {
+                        // 非分页数据（向后兼容）
                         clients = data.data;
+                        paginationData = {
+                            currentPage: 0,
+                            totalPages: 1,
+                            totalElements: clients.length,
+                            pageSize: pageSize
+                        };
                         displayClients(clients);
+                        displayPagination();
+                    } else {
+                        console.error('数据格式错误:', data);
+                        clients = [];
+                        displayClients([]);
+                        showMessage('数据格式错误，请刷新页面重试', 'error');
                     }
+                } else {
+                    console.error('API返回错误:', data.message);
+                    clients = [];
+                    displayClients([]);
+                    showMessage(data.message || '加载客户失败', 'error');
                 }
             } catch (error) {
                 console.error('加载客户失败:', error);
-                showMessage('加载客户失败', 'error');
+                clients = [];
+                displayClients([]);
+                showMessage('加载客户失败: ' + error.message, 'error');
             }
         }
 
@@ -271,6 +546,11 @@
                 container.innerHTML = '<p style="text-align: center; color: #999;">暂无咨询客户</p>';
                 return;
             }
+
+            // 获取当前用户角色，判断是否显示删除按钮（只有超级管理员可以删除）
+            const currentUser = getUser();
+            const isSuperAdmin = currentUser && currentUser.role === 'SUPER_ADMIN';
+            const showDeleteButton = isSuperAdmin;
 
             let html = '';
             clientsList.forEach(client => {
@@ -283,47 +563,103 @@
                 
                 html += `
                     <div class="client-card" onclick="viewClient(${client.id})">
-                        <div class="client-header">
-                            <div class="client-name">${client.name || 'N/A'}</div>
-                            <div class="status-badge" style="background: ${statusColors[client.status] || '#ccc'}; color: white;">
-                                ${client.status || 'N/A'}
-                            </div>
-                        </div>
                         <div class="client-info">
                             <div class="info-item">
-                                <span class="info-label">联系电话:</span>
-                                <span>${client.contactPhone || 'N/A'}</span>
+                                <span class="info-label">姓名</span>
+                                <span>${client.name || 'N/A'}</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">意向国家:</span>
-                                <span>${client.targetCountry || 'N/A'}</span>
+                                <span class="info-label">性别</span>
+                                <span>${client.gender || 'N/A'}</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">意向学位:</span>
-                                <span>${getDegreeDisplay(client.targetDegree)}</span>
+                                <span class="info-label">出生日期</span>
+                                <span>${client.birthDate || 'N/A'}</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">咨询日期:</span>
+                                <span class="info-label">联系方式</span>
+                                <span>${client.contactInfo || 'N/A'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">咨询时间</span>
                                 <span>${client.consultationDate || 'N/A'}</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">渠道来源:</span>
-                                <span>${client.channel || 'N/A'}</span>
+                                <span class="info-label">意向国家</span>
+                                <span>${client.intendedCountry || client.targetCountry || 'N/A'}</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">现就读学校:</span>
-                                <span>${client.currentSchool || 'N/A'}</span>
+                                <span class="info-label">渠道来源</span>
+                                <span>${client.channelSource || client.channel || 'N/A'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">客户状态</span>
+                                <span>${client.status || 'N/A'}</span>
                             </div>
                         </div>
-                        <div style="margin-top: 10px; text-align: right;">
+                        <div class="client-actions">
+                            <button class="btn btn-small btn-info" onclick="event.stopPropagation(); viewClient(${client.id})">查看详情</button>
                             <button class="btn btn-small" onclick="event.stopPropagation(); editClient(${client.id})">编辑</button>
-                            <button class="btn btn-small" onclick="event.stopPropagation(); deleteClient(${client.id})">删除</button>
+                            ${showDeleteButton ? `<button class="btn btn-small btn-danger" onclick="event.stopPropagation(); deleteClient(${client.id})">删除</button>` : ''}
                         </div>
                     </div>
                 `;
             });
 
             container.innerHTML = html;
+        }
+
+        function displayPagination() {
+            const paginationDiv = document.getElementById('pagination');
+            if (!paginationDiv) return;
+            
+            // 总是显示分页信息，即使只有一页
+            let html = '';
+            
+            // 只有当有多页时才显示翻页按钮
+            if (paginationData.totalPages > 1) {
+                // 首页按钮
+                if (paginationData.currentPage > 0) {
+                    html += `<button class="btn btn-small" onclick="loadClients(0)">首页</button>`;
+                    html += `<button class="btn btn-small" onclick="loadClients(${paginationData.currentPage - 1})">上一页</button>`;
+                }
+                
+                // 尾页按钮
+                if (paginationData.currentPage < paginationData.totalPages - 1) {
+                    html += `<button class="btn btn-small" onclick="loadClients(${paginationData.currentPage + 1})">下一页</button>`;
+                    html += `<button class="btn btn-small" onclick="loadClients(${paginationData.totalPages - 1})">尾页</button>`;
+                }
+                
+                // 添加跳转功能
+                html += `<span style="margin-left: 20px;">
+                    <input type="number" id="pageJumpInput" min="1" max="${paginationData.totalPages}" 
+                           value="${paginationData.currentPage + 1}" 
+                           style="width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; margin: 0 5px;"
+                           onkeypress="if(event.key === 'Enter') jumpToPage()">
+                    <button class="btn btn-small" onclick="jumpToPage()">跳转</button>
+                </span>`;
+            }
+            
+            // 显示统计信息（总是显示）
+            html += `<span style="margin-left: 20px; color: #666;">共 ${paginationData.totalElements} 条记录，第 ${paginationData.currentPage + 1}/${paginationData.totalPages} 页</span>`;
+            
+            paginationDiv.innerHTML = html;
+        }
+        
+        function jumpToPage() {
+            const input = document.getElementById('pageJumpInput');
+            if (!input) return;
+            
+            const pageNumber = parseInt(input.value);
+            const totalPages = paginationData.totalPages;
+            
+            if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > totalPages) {
+                alert(`请输入1到${totalPages}之间的页数！`);
+                input.value = paginationData.currentPage + 1;
+                return;
+            }
+            
+            loadClients(pageNumber - 1);
         }
 
         function getDegreeDisplay(degree) {
@@ -341,24 +677,221 @@
             const client = clients.find(c => c.id === id);
             if (!client) return;
 
+            // 格式化日期
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '未填写';
+                return dateStr;
+            };
+
+            // 获取联系方式
+            const contactInfo = client.contactInfo || '未填写';
+
+            // 渲染信息行的辅助函数
+            const renderInfoRow = (fields, options = {}) => {
+                if (!fields || fields.length === 0) {
+                    return '';
+                }
+                const hasFull = fields.some(field => field.full);
+                let rowClass = hasFull ? 'info-row info-row-full' : 'info-row';
+                if (options.nowrap) {
+                    rowClass += ' info-row-nowrap';
+                }
+                const fieldHtml = fields.map(field => {
+                    const fieldClasses = ['info-field'];
+                    if (field.full) fieldClasses.push('info-field-full');
+                    if (field.size === 'short') fieldClasses.push('size-short');
+                    if (field.size === 'medium') fieldClasses.push('size-medium');
+                    if (field.size === 'name') fieldClasses.push('size-name');
+                    if (field.size === 'long') fieldClasses.push('size-long');
+                    return `
+                    <div class="${fieldClasses.join(' ')}">
+                        <label>${field.label}</label>
+                        <span>${field.value || '未填写'}</span>
+                    </div>
+                `;
+                }).join('');
+                return `<div class="${rowClass}">${fieldHtml}</div>`;
+            };
+
+            const detailRowsHtml = [
+                renderInfoRow([
+                    { label: '姓名', value: client.name || '未填写', size: 'name' },
+                    { label: '性别', value: client.gender || '未填写', size: 'short' },
+                    { label: '出生日期', value: formatDate(client.birthDate), size: 'medium' },
+                    { label: '身份证号', value: client.idCard || '未填写', size: 'long' },
+                    { label: '意向国家', value: client.intendedCountry || client.targetCountry || '未填写', size: 'medium' }
+                ], { nowrap: true }),
+                renderInfoRow([
+                    { label: '联系方式', value: contactInfo },
+                    { label: '家庭住址', value: client.address || client.homeAddress || '未填写' }
+                ]),
+                renderInfoRow([
+                    { label: '现就读学校', value: client.currentSchool || '未填写' },
+                    { label: '专业', value: client.major || '未填写' },
+                    { label: 'GPA', value: client.gpa != null ? client.gpa : '未填写' },
+                    { label: '语言 / 标化成绩', value: client.languageScores || client.englishScore || '未填写' }
+                ]),
+                renderInfoRow([
+                    { label: '咨询日期', value: formatDate(client.consultationDate) },
+                    { label: '渠道来源', value: client.channelSource || client.channel || '未填写' },
+                    { label: '客户状态', value: client.status || '未填写' },
+                    { label: '入学时间', value: formatDate(client.enrollmentDate) }
+                ]),
+                renderInfoRow([
+                    { label: '负责咨询顾问', value: client.counselor && client.counselor.realName ? client.counselor.realName : (client.counselorId ? '已分配' : '未分配') },
+                    { label: '负责文案', value: client.writer && client.writer.realName ? client.writer.realName : (client.writerId ? '已分配' : '未分配') }
+                ])
+            ].join('');
+
             const content = `
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-                    <div><strong>姓名:</strong> ${client.name || 'N/A'}</div>
-                    <div><strong>联系电话:</strong> ${client.contactPhone || 'N/A'}</div>
-                    <div><strong>性别:</strong> ${client.gender || 'N/A'}</div>
-                    <div><strong>客户状态:</strong> ${client.status || 'N/A'}</div>
-                    <div><strong>咨询日期:</strong> ${client.consultationDate || 'N/A'}</div>
-                    <div><strong>渠道来源:</strong> ${client.channel || 'N/A'}</div>
-                    <div><strong>意向国家:</strong> ${client.targetCountry || 'N/A'}</div>
-                    <div><strong>意向学位:</strong> ${getDegreeDisplay(client.targetDegree)}</div>
-                    <div><strong>毕业时间:</strong> ${client.graduationDate || 'N/A'}</div>
-                    <div><strong>英语成绩:</strong> ${client.englishScore || 'N/A'}</div>
-                    <div><strong>现就读学校:</strong> ${client.currentSchool || 'N/A'}</div>
-                    <div><strong>专业:</strong> ${client.major || 'N/A'}</div>
-                    <div><strong>邮箱:</strong> ${client.email || 'N/A'}</div>
-                    <div><strong>家庭住址:</strong> ${client.homeAddress || 'N/A'}</div>
-                    <div><strong>备注:</strong> ${client.notes || 'N/A'}</div>
-                    <div><strong>回访情况:</strong> ${client.followUpStatus || 'N/A'}</div>
+                <style>
+                    .info-section {
+                        background: white;
+                        border-radius: 12px;
+                        padding: 25px;
+                        margin-bottom: 20px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        border-left: 4px solid #667eea;
+                    }
+                    .info-section h3 {
+                        color: #667eea;
+                        margin-bottom: 20px;
+                        font-size: 18px;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    .info-section h3::before {
+                        content: '';
+                        width: 4px;
+                        height: 20px;
+                        background: #667eea;
+                        border-radius: 2px;
+                    }
+                    .student-info-rows {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                    }
+                    .info-row {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 12px;
+                        padding: 12px 14px;
+                        background: #fbfcff;
+                        border: 1px solid #f0f0f5;
+                        border-radius: 10px;
+                    }
+                    .info-row-nowrap {
+                        flex-wrap: wrap;
+                    }
+                    .info-row-nowrap .info-field {
+                        flex: 1 1 130px;
+                        min-width: 120px;
+                    }
+                    .info-row-full .info-field {
+                        flex: 1 1 100%;
+                    }
+                    .info-field {
+                        flex: 1 1 180px;
+                        min-width: 150px;
+                        background: #f7f9fc;
+                        border-radius: 8px;
+                        padding: 8px 10px;
+                        border-left: 3px solid #667eea;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 5px;
+                    }
+                    .info-field.size-short {
+                        flex: 0 0 110px;
+                        min-width: 90px;
+                    }
+                    .info-field.size-medium {
+                        flex: 1 1 140px;
+                        min-width: 120px;
+                    }
+                    .info-field.size-name {
+                        flex: 0 0 90px;
+                        min-width: 80px;
+                    }
+                    .info-field.size-long {
+                        flex: 3 1 260px;
+                        min-width: 220px;
+                    }
+                    .info-field label {
+                        font-weight: 600;
+                        color: #495057;
+                        font-size: 13px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .info-field span {
+                        color: #212529;
+                        font-size: 15px;
+                        word-break: break-word;
+                    }
+                    .empty-field {
+                        color: #6c757d;
+                        font-style: italic;
+                    }
+                    .info-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                        gap: 15px;
+                    }
+                    .info-item {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 5px;
+                        padding: 12px;
+                        background: #f8f9fa;
+                        border-radius: 8px;
+                        border-left: 3px solid #667eea;
+                    }
+                    .info-item label {
+                        font-weight: 600;
+                        color: #495057;
+                        font-size: 13px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .info-item span {
+                        color: #212529;
+                        font-size: 15px;
+                        word-break: break-word;
+                    }
+                </style>
+                
+                <div class="info-section">
+                    <h3>📋 客户信息概览</h3>
+                    <div class="student-info-rows detail-view">
+                        ${detailRowsHtml}
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>🏆 个人成就</h3>
+                    <div class="student-info-rows">
+                        ${renderInfoRow([
+                            { label: '获奖情况', value: client.awards || '暂无获奖记录', full: true }
+                        ])}
+                        ${renderInfoRow([
+                            { label: '个人经历', value: client.experiences || '暂无经历描述', full: true }
+                        ])}
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📝 其他信息</h3>
+                    <div class="student-info-rows">
+                        ${renderInfoRow([
+                            { label: '备注', value: client.notes || '暂无备注信息', full: true }
+                        ])}
+                        ${renderInfoRow([
+                            { label: '回访情况', value: client.followUpStatus || '暂无回访记录', full: true }
+                        ])}
+                    </div>
                 </div>
             `;
             
@@ -368,11 +901,43 @@
 
         function closeViewModal() {
             document.getElementById('viewModal').style.display = 'none';
+            // 清空内容，避免样式影响其他部分
+            document.getElementById('viewContent').innerHTML = '';
         }
 
         async function showAddModal() {
+            // 获取当前用户信息
+            const currentUser = getUser();
+            const isCounselor = currentUser && currentUser.role === 'COUNSELOR';
+            const isWriter = currentUser && currentUser.role === 'WRITER';
+            
             document.getElementById('clientForm').reset();
             document.getElementById('clientId').value = '';
+            document.getElementById('status').value = '潜在客户'; // 设置默认状态
+            
+            // 确保下拉选项已加载
+            await loadCounselorsAndWriters();
+            
+            // 设置咨询顾问和文案的默认值
+            const counselorSelect = document.getElementById('counselorId');
+            const writerSelect = document.getElementById('writerId');
+            
+            if (isCounselor) {
+                // 顾问添加时，默认设置为当前顾问，且不可更改
+                counselorSelect.value = currentUser.id;
+                counselorSelect.disabled = true;
+            } else {
+                counselorSelect.disabled = false;
+            }
+            
+            if (isWriter) {
+                // 文案添加时，默认设置为当前文案，且不可更改
+                writerSelect.value = currentUser.id;
+                writerSelect.disabled = true;
+            } else {
+                writerSelect.disabled = false;
+            }
+            
             document.getElementById('modalTitle').textContent = '添加咨询客户';
             document.getElementById('submitText').textContent = '保存';
             document.getElementById('clientModal').style.display = 'block';
@@ -382,23 +947,63 @@
             const client = clients.find(c => c.id === id);
             if (!client) return;
 
+            // 获取当前用户信息
+            const currentUser = getUser();
+            const isCounselor = currentUser && currentUser.role === 'COUNSELOR';
+            const isWriter = currentUser && currentUser.role === 'WRITER';
+
             document.getElementById('clientId').value = client.id;
             document.getElementById('name').value = client.name || '';
-            document.getElementById('contactPhone').value = client.contactPhone || '';
             document.getElementById('gender').value = client.gender || '';
             document.getElementById('status').value = client.status || '潜在客户';
+            document.getElementById('birthDate').value = client.birthDate || '';
+            document.getElementById('idCard').value = client.idCard || '';
             document.getElementById('consultationDate').value = client.consultationDate || '';
-            document.getElementById('channel').value = client.channel || '';
-            document.getElementById('targetCountry').value = client.targetCountry || '';
-            document.getElementById('targetDegree').value = client.targetDegree || '';
-            document.getElementById('graduationDate').value = client.graduationDate || '';
-            document.getElementById('englishScore').value = client.englishScore || '';
+            document.getElementById('channelSource').value = client.channelSource || client.channel || '';
+            document.getElementById('intendedCountry').value = client.intendedCountry || client.targetCountry || '';
+            document.getElementById('enrollmentDate').value = client.enrollmentDate || '';
             document.getElementById('currentSchool').value = client.currentSchool || '';
             document.getElementById('major').value = client.major || '';
-            document.getElementById('homeAddress').value = client.homeAddress || '';
-            document.getElementById('email').value = client.email || '';
+            document.getElementById('gpa').value = client.gpa || '';
+            document.getElementById('languageScores').value = client.languageScores || client.englishScore || '';
+            document.getElementById('address').value = client.address || client.homeAddress || '';
+            
+            // 设置联系方式
+            document.getElementById('contactInfo').value = client.contactInfo || '';
+            
+            document.getElementById('awards').value = client.awards || '';
+            document.getElementById('experiences').value = client.experiences || '';
             document.getElementById('notes').value = client.notes || '';
             document.getElementById('followUpStatus').value = client.followUpStatus || '';
+            
+            // 确保下拉选项已加载
+            await loadCounselorsAndWriters();
+            
+            // 设置咨询顾问ID
+            const counselorSelect = document.getElementById('counselorId');
+            if (isCounselor) {
+                // 顾问编辑时，默认设置为当前顾问，且不可更改
+                counselorSelect.value = currentUser.id;
+                counselorSelect.disabled = true;
+            } else {
+                // 管理员或其他角色可以修改
+                const counselorId = (client.counselor && client.counselor.id) || client.counselorId || '';
+                counselorSelect.value = counselorId;
+                counselorSelect.disabled = false;
+            }
+            
+            // 设置文案ID
+            const writerSelect = document.getElementById('writerId');
+            if (isWriter) {
+                // 文案编辑时，默认设置为当前文案，且不可更改
+                writerSelect.value = currentUser.id;
+                writerSelect.disabled = true;
+            } else {
+                // 管理员或其他角色可以修改
+                const writerId = (client.writer && client.writer.id) || client.writerId || '';
+                writerSelect.value = writerId;
+                writerSelect.disabled = false;
+            }
 
             document.getElementById('modalTitle').textContent = '编辑咨询客户';
             document.getElementById('submitText').textContent = '保存修改';
@@ -406,6 +1011,12 @@
         }
 
         function closeModal() {
+            // 重置表单字段的禁用状态
+            const counselorSelect = document.getElementById('counselorId');
+            const writerSelect = document.getElementById('writerId');
+            if (counselorSelect) counselorSelect.disabled = false;
+            if (writerSelect) writerSelect.disabled = false;
+            
             document.getElementById('clientModal').style.display = 'none';
         }
 
@@ -416,7 +1027,9 @@
                 const data = await apiRequest(`/consultation-clients/${id}`, { method: 'DELETE' });
                 if (data.code === 200) {
                     showMessage('删除成功', 'success');
-                    loadClients();
+                    // 删除后保持在当前页，如果当前页没有数据了，则跳转到上一页或第一页
+                    const targetPage = currentPage > 0 ? Math.max(0, currentPage - 1) : 0;
+                    loadClients(targetPage);
                 }
             } catch (error) {
                 showMessage('删除失败', 'error');
@@ -436,23 +1049,33 @@
 
             try {
                 const id = document.getElementById('clientId').value;
+                const status = document.getElementById('status').value;
+                
+                // 获取联系方式
+                const contactInfo = document.getElementById('contactInfo').value.trim();
+                
                 const formData = {
                     name: document.getElementById('name').value.trim(),
-                    contactPhone: document.getElementById('contactPhone').value.trim(),
+                    contactInfo: contactInfo,
                     gender: document.getElementById('gender').value || null,
-                    status: document.getElementById('status').value,
+                    status: status,
+                    birthDate: document.getElementById('birthDate').value || null,
+                    idCard: document.getElementById('idCard').value.trim(),
                     consultationDate: document.getElementById('consultationDate').value || null,
-                    channel: document.getElementById('channel').value.trim(),
-                    targetCountry: document.getElementById('targetCountry').value.trim(),
-                    targetDegree: document.getElementById('targetDegree').value || null,
-                    graduationDate: document.getElementById('graduationDate').value || null,
-                    englishScore: document.getElementById('englishScore').value.trim(),
+                    channelSource: document.getElementById('channelSource').value.trim(),
+                    intendedCountry: document.getElementById('intendedCountry').value.trim(),
+                    enrollmentDate: document.getElementById('enrollmentDate').value || null,
                     currentSchool: document.getElementById('currentSchool').value.trim(),
                     major: document.getElementById('major').value.trim(),
-                    homeAddress: document.getElementById('homeAddress').value.trim(),
-                    email: document.getElementById('email').value.trim(),
+                    gpa: document.getElementById('gpa').value ? parseFloat(document.getElementById('gpa').value) : null,
+                    languageScores: document.getElementById('languageScores').value.trim(),
+                    address: document.getElementById('address').value.trim(),
+                    awards: document.getElementById('awards').value.trim(),
+                    experiences: document.getElementById('experiences').value.trim(),
                     notes: document.getElementById('notes').value.trim(),
-                    followUpStatus: document.getElementById('followUpStatus').value.trim()
+                    followUpStatus: document.getElementById('followUpStatus').value.trim(),
+                    counselorId: document.getElementById('counselorId').value ? parseInt(document.getElementById('counselorId').value) : null,
+                    writerId: document.getElementById('writerId').value ? parseInt(document.getElementById('writerId').value) : null
                 };
 
                 const url = id ? `/consultation-clients/${id}` : '/consultation-clients';
@@ -464,9 +1087,18 @@
                 });
                 
                 if (data.code === 200) {
+                    // 如果状态变为签约客户，显示特殊提示
+                    if (id && status === '签约客户') {
+                        showMessage('客户信息已成功复制到签约客户系统，咨询客户信息已保留！', 'success');
+                        closeModal();
+                        // 重新加载当前页数据
+                        loadClients(currentPage);
+                    } else {
                     showMessage(id ? '客户更新成功！' : '客户创建成功！', 'success');
                     closeModal();
-                    loadClients();
+                    // 保持在当前页
+                    loadClients(currentPage);
+                    }
                 } else {
                     showMessage(data.message || '操作失败', 'error');
                 }
@@ -518,10 +1150,132 @@
             }
         }
 
+        // 加载咨询顾问和文案选项
+        async function loadCounselorsAndWriters() {
+            try {
+                const usersData = await apiRequest('/users');
+                if (usersData.code === 200) {
+                    const users = usersData.data;
+                    const counselorSelect = document.getElementById('counselorId');
+                    const writerSelect = document.getElementById('writerId');
+                    
+                    // 清空选项
+                    counselorSelect.innerHTML = '';
+                    writerSelect.innerHTML = '';
+                    
+                    // 填充咨询顾问和文案选项（只包含对应角色，不包括ADMIN和SUPER_ADMIN）
+                    users.forEach(user => {
+                        // 咨询顾问选项：只包含COUNSELOR角色
+                        if (user.role === 'COUNSELOR') {
+                            const option = document.createElement('option');
+                            option.value = user.id;
+                            option.textContent = user.realName || user.username;
+                            counselorSelect.appendChild(option);
+                        }
+                        // 文案选项：只包含WRITER角色
+                        if (user.role === 'WRITER') {
+                            const option = document.createElement('option');
+                            option.value = user.id;
+                            option.textContent = user.realName || user.username;
+                            writerSelect.appendChild(option);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('加载咨询顾问和文案选项失败:', error);
+            }
+        }
+
+        // 高级搜索相关函数
+        function showAdvancedSearch() {
+            document.getElementById('advancedSearchModal').style.display = 'block';
+        }
+
+        function closeAdvancedSearchModal() {
+            document.getElementById('advancedSearchModal').style.display = 'none';
+        }
+
+        function resetAdvancedSearch() {
+            document.getElementById('advancedSearchForm').reset();
+        }
+
+        // 高级搜索表单提交
+        document.getElementById('advancedSearchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('searchName').value.trim() || null,
+                idCard: document.getElementById('searchIdCard').value.trim() || null,
+                contact: document.getElementById('searchContact').value.trim() || null,
+                gender: document.getElementById('searchGender').value || null,
+                currentSchool: document.getElementById('searchCurrentSchool').value.trim() || null,
+                major: document.getElementById('searchMajor').value.trim() || null,
+                intendedCountry: document.getElementById('searchIntendedCountry').value.trim() || null,
+                channelSource: document.getElementById('searchChannelSource').value.trim() || null,
+                status: document.getElementById('searchStatus').value || null,
+                consultationDateStart: document.getElementById('searchConsultationDateStart').value || null,
+                consultationDateEnd: document.getElementById('searchConsultationDateEnd').value || null
+            };
+
+            // 移除空值
+            Object.keys(formData).forEach(key => {
+                if (formData[key] === null || formData[key] === '') {
+                    delete formData[key];
+                }
+            });
+
+            try {
+                const response = await apiRequest('/consultation-clients/advanced-search', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.code === 200) {
+                    closeAdvancedSearchModal();
+                    // 显示搜索结果
+                    if (response.data.content) {
+                        clients = response.data.content;
+                        paginationData = {
+                            currentPage: response.data.currentPage || 0,
+                            totalPages: response.data.totalPages || 0,
+                            totalElements: response.data.totalElements || 0,
+                            pageSize: response.data.pageSize || 10
+                        };
+                        displayClients(clients);
+                        displayPagination(paginationData);
+                    } else {
+                        clients = response.data;
+                        displayClients(clients);
+                        document.getElementById('pagination').innerHTML = '';
+                    }
+                    showMessage(`找到 ${response.data.totalElements || response.data.length || 0} 条结果`, 'success');
+                } else {
+                    showMessage('搜索失败: ' + response.message, 'error');
+                }
+            } catch (error) {
+                console.error('搜索失败:', error);
+                showMessage('搜索失败: ' + error.message, 'error');
+            }
+        });
+
         // 页面加载
         document.addEventListener('DOMContentLoaded', () => {
             loadClients();
+            loadCounselorsAndWriters();
         });
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('clientModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+            const advancedSearchModal = document.getElementById('advancedSearchModal');
+            if (event.target == advancedSearchModal) {
+                closeAdvancedSearchModal();
+            }
+        }
     </script>
 </body>
 </html>
+

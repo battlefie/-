@@ -6,25 +6,66 @@
     <title>仪表盘 - 留学信息管理系统</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .dashboard {
+            padding: 10px;
+            max-width: 100%;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0;
+        }
+        
+        .dashboard-header {
+            margin-bottom: 16px;
+            padding: 0 4px;
+        }
+        
+        .dashboard-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #333;
+        }
+        
         .dashboard-main {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 12px;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
         }
         
         .dashboard-bottom {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 20px;
+        }
+        
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .dashboard-card:hover {
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
         }
         
         .section-title {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: white;
-            margin-bottom: 10px;
-            padding: 6px 12px;
+            margin-bottom: 12px;
+            padding: 8px 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 8px;
             text-align: center;
@@ -32,17 +73,18 @@
         
         .stat-card-vertical {
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 16px 20px;
             border: 1px solid rgba(102, 126, 234, 0.1);
-            min-height: 280px;
+            min-height: auto;
             height: auto;
-            transition: box-shadow 0.2s ease;
+            transition: all 0.3s ease;
         }
 
         .stat-card-vertical:hover {
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
         }
         
         .stat-item {
@@ -57,14 +99,21 @@
             border-bottom: none;
         }
         
+        .stat-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 12px;
+        }
+        
         .stat-label {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: #666;
             font-weight: 500;
         }
         
         .stat-value {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             font-weight: 700;
             background: linear-gradient(135deg, #667eea, #764ba2);
             -webkit-background-clip: text;
@@ -72,44 +121,92 @@
             background-clip: text;
         }
 
-        .applications-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            padding: 12px;
-            min-height: 280px;
-            height: auto;
+        .year-stats {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #f0f0f0;
+            max-height: 120px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .year-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px 16px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        
+        .year-stats-grid .year-stat-item {
+            padding: 4px 0;
+            border-bottom: none;
+        }
+        
+        .year-stats::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .year-stats::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .year-stats::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+        
+        .year-stats::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+        
+        .year-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 0.85rem;
+        }
+        
+        .year-stat-label {
+            color: #888;
+        }
+        
+        .year-stat-value {
+            color: #667eea;
+            font-weight: 600;
         }
         
         .birthday-card {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            padding: 12px;
-            min-height: 150px;
+            background: transparent;
+            border-radius: 12px;
+            padding: 16px;
+            min-height: auto;
             height: auto;
-            display: none;
+            display: block;
         }
         
         .consultation-button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 20px;
+            border-radius: 12px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            min-height: 150px;
+            min-height: auto;
             height: auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
         
         .consultation-button:hover {
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
         }
 
         @media (max-width: 1200px) {
@@ -121,20 +218,6 @@
     </style>
 </head>
 <body style="background: #f5f5f5;">
-    <nav>
-        <div class="nav-content">
-            <div class="logo">🎓 留学管理系统</div>
-            <ul class="nav-links">
-                <li><a href="/dashboard.html">仪表盘</a></li>
-                <li><a href="/students.html">学生管理</a></li>
-                <li><a href="/universities.html">大学信息</a></li>
-                <li><a href="/applications.html">申请管理</a></li>
-                <li><a href="/register.html" id="register-nav-link" style="display: none;">注册新用户</a></li>
-                <li><a href="#" onclick="showAdvancedSearch()" style="color: #667eea; font-weight: bold;">🔍 高级搜索</a></li>
-                <li><a href="#" onclick="logout()">退出登录</a></li>
-            </ul>
-        </div>
-    </nav>
 
     <div class="dashboard">
         <div class="container">
@@ -143,53 +226,71 @@
             </div>
 
             <div class="dashboard-main">
-                <div>
+                <div class="dashboard-card">
                     <div class="section-title">申请概览</div>
-                    <div class="stat-card-vertical">
-                        <div class="stat-item">
-                            <span class="stat-label">学生总数</span>
-                            <span class="stat-value" id="studentCount">0</span>
+                    <div class="stat-card-vertical" style="box-shadow: none; border: none; padding: 16px 20px;">
+                        <div class="stat-row">
+                            <div class="stat-item" style="border-bottom: none; padding: 0;">
+                                <span class="stat-label">已获签学生</span>
+                                <span class="stat-value" id="visaApprovedCount">0</span>
+                            </div>
+                            <div class="stat-item" style="border-bottom: none; padding: 0;">
+                                <span class="stat-label">咨询客户数</span>
+                                <span class="stat-value" id="consultationClientCount">0</span>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-label">大学数量</span>
-                            <span class="stat-value" id="universityCount">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">申请记录</span>
-                            <span class="stat-value" id="applicationCount">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">已录取</span>
-                            <span class="stat-value" id="acceptedCount">0</span>
+                        <div class="year-stats" id="yearStatsContainer">
+                            <!-- 历年学生人数将在这里动态生成 -->
+                            <div style="text-align: center; color: #999; padding: 10px;">加载中...</div>
                         </div>
                     </div>
                 </div>
-                <div>
-                    <div class="section-title">最近申请记录</div>
-                    <div class="applications-card">
-                        <div id="recentApplications" style="height: 100%; max-height: 300px; overflow-y: auto;">
-                            <p style="text-align: center; color: #999; font-size: 0.9rem; padding-top: 50px;">加载中...</p>
+                <div class="dashboard-card">
+                    <div class="section-title">生日提醒</div>
+                    <div class="birthday-card" id="birthdayCard" style="box-shadow: none; border: none; background: transparent; padding: 16px 20px; min-height: auto;">
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <div style="font-size: 1.8rem; margin-top: 2px;">🎂</div>
+                            <div style="flex: 1;">
+                                <h3 style="color: #d63384; margin: 0 0 8px 0; font-size: 0.9rem; font-weight: 600;">今日生日</h3>
+                                <div id="birthdayList" style="color: #333; font-size: 0.8rem; line-height: 1.4; max-height: 100px; overflow-y: auto;">
+                                    <!-- 生日列表将在这里显示 -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="dashboard-bottom">
-                <div class="birthday-card" id="birthdayCard">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="font-size: 1.8rem;">🎂</div>
-                        <div style="flex: 1;">
-                            <h3 style="color: #d63384; margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 600;">生日提醒</h3>
-                            <div id="birthdayList" style="color: #333; font-size: 0.8rem; line-height: 1.3;">
-                                <!-- 生日列表将在这里显示 -->
+                <div class="dashboard-card">
+                    <div class="section-title">签约客户管理系统</div>
+                    <div class="consultation-button" onclick="window.location.href='/students.html'" style="min-height: auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 0 0 12px 12px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="font-size: 2.2rem;">📋</div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">签约客户管理系统</div>
+                                <div style="font-size: 0.85rem; opacity: 0.95; line-height: 1.5;">
+                                    <span>学生管理</span> • <span>申请管理</span> • <span>高级搜索</span>
+                                </div>
+                                <div style="margin-top: 8px; font-size: 0.8rem; opacity: 0.85; font-weight: 500;">点击进入 →</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="consultation-button" onclick="window.location.href='/consultation-clients.html'">
-                    <div style="font-size: 1.8rem; margin-bottom: 8px;">📋</div>
-                    <div style="font-size: 1rem; font-weight: 600;">咨询客户管理</div>
-                    <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 5px;">点击进入</div>
+                <div class="dashboard-card">
+                    <div class="section-title">咨询客户管理</div>
+                    <div class="consultation-button" onclick="window.location.href='/consultation-clients.html'" style="min-height: auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 0 0 12px 12px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="font-size: 2.2rem;">📋</div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">咨询客户管理</div>
+                                <div style="font-size: 0.85rem; opacity: 0.95; line-height: 1.5;">
+                                    <span>客户管理</span> • <span>高级搜索</span> • <span>客户跟进</span>
+                                </div>
+                                <div style="margin-top: 8px; font-size: 0.8rem; opacity: 0.85; font-weight: 500;">点击进入 →</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -212,86 +313,129 @@
                 
                 // 获取用户角色
                 const currentUser = getUser();
-                const isAdmin = currentUser && currentUser.role === 'ADMIN';
+                const isSuperAdmin = currentUser && currentUser.role === 'SUPER_ADMIN';
+                const isAdmin = isSuperAdmin || (currentUser && currentUser.role === 'ADMIN');
                 const isCounselor = currentUser && currentUser.role === 'COUNSELOR';
                 const isWriter = currentUser && currentUser.role === 'WRITER';
                 
-                // 根据角色加载不同的数据
-                const promises = [fetch('/api/students?page=0&size=10', { headers })];
-                
-                // 根据角色加载不同的数据
-                if (isAdmin) {
-                    // 管理员可以访问大学和申请数据
-                    promises.push(fetch('/api/universities?page=0&size=10', { headers }));
-                    promises.push(fetch('/api/applications?page=0&size=10', { headers }));
-                } else if (isCounselor) {
-                    // 咨询顾问只能访问大学数据
-                    promises.push(fetch('/api/universities?page=0&size=10', { headers }));
-                    promises.push(null);
-                } else if (isWriter) {
-                    // 文案可以访问大学和申请数据
-                    promises.push(fetch('/api/universities?page=0&size=10', { headers }));
-                    promises.push(fetch('/api/applications?page=0&size=10', { headers }));
+                // 获取所有申请数据以统计已获签学生
+                let allApplications = [];
+                try {
+                    let page = 0;
+                    let hasMore = true;
+                    while (hasMore) {
+                        const appResponse = await fetch(`/api/applications?page=${page}&size=100`, { headers });
+                        const appData = await appResponse.json();
+                        if (appData.code === 200) {
+                            const apps = appData.data.content ? appData.data.content : appData.data;
+                            allApplications = allApplications.concat(apps);
+                            if (appData.data && appData.data.last) {
+                                hasMore = false;
+                            } else if (!appData.data || apps.length === 0) {
+                                hasMore = false;
+                            } else {
+                                page++;
+                            }
+                            if (page > 100) hasMore = false;
                 } else {
-                    // 其他角色
-                    promises.push(null);
-                    promises.push(null);
+                            hasMore = false;
                 }
-                
-                const results = await Promise.allSettled(promises);
-                
-                // 处理学生数据
-                if (results[0].status === 'fulfilled') {
-                    const studentsData = await results[0].value.json();
-                    if (studentsData.code === 200) {
-                        const studentCount = studentsData.data.totalElements ? studentsData.data.totalElements : studentsData.data.length;
-                        document.getElementById('studentCount').textContent = studentCount;
                     }
+                } catch (error) {
+                    console.error('获取申请数据失败:', error);
                 }
                 
-                // 处理大学数据（管理员、咨询顾问和文案）
-                if ((isAdmin || isCounselor || isWriter) && results[1].status === 'fulfilled') {
-                    const universitiesData = await results[1].value.json();
-                    if (universitiesData.code === 200) {
-                        const universityCount = universitiesData.data.totalElements ? universitiesData.data.totalElements : universitiesData.data.length;
-                        document.getElementById('universityCount').textContent = universityCount;
+                // 统计已获签学生数量（去重）
+                const visaApprovedStudentIds = new Set();
+                allApplications.forEach(app => {
+                    if (app.visaApprovedDate) {
+                        visaApprovedStudentIds.add(app.student?.id);
                     }
-                } else if (!isAdmin && !isCounselor && !isWriter) {
-                    // 其他角色显示"--"
-                    document.getElementById('universityCount').textContent = '--';
+                });
+                document.getElementById('visaApprovedCount').textContent = visaApprovedStudentIds.size;
+                
+                // 获取咨询客户数量（根据权限自动过滤）
+                try {
+                    const consultationResponse = await fetch('/api/consultation-clients', { headers });
+                    const consultationData = await consultationResponse.json();
+                    if (consultationData.code === 200) {
+                        let consultationCount = 0;
+                        // 处理不同的响应格式
+                        if (consultationData.data) {
+                            if (consultationData.data.totalElements !== undefined) {
+                                // 分页响应格式
+                                consultationCount = consultationData.data.totalElements;
+                            } else if (Array.isArray(consultationData.data)) {
+                                // 数组格式
+                                consultationCount = consultationData.data.length;
+                            }
+                        }
+                        document.getElementById('consultationClientCount').textContent = consultationCount;
+                    } else {
+                        console.warn('获取咨询客户数据失败:', consultationData.message);
+                        document.getElementById('consultationClientCount').textContent = '0';
+                    }
+                } catch (error) {
+                    console.error('获取咨询客户数据失败:', error);
+                    document.getElementById('consultationClientCount').textContent = '0';
                 }
                 
-                // 处理申请数据（管理员和文案）
-                const appIndex = isAdmin ? 2 : (isWriter ? 2 : -1);
-                if (appIndex >= 0 && results[appIndex] && results[appIndex].status === 'fulfilled') {
-                    try {
-                        const applicationsData = await results[appIndex].value.json();
-                        if (applicationsData.code === 200) {
-                            const applications = applicationsData.data.content ? applicationsData.data.content : applicationsData.data;
-                            const applicationCount = applicationsData.data.totalElements ? applicationsData.data.totalElements : applications.length;
-                            document.getElementById('applicationCount').textContent = applicationCount;
-                            
-                            const acceptedCount = applications.filter(app => app.status === 'ACCEPTED').length;
-                            document.getElementById('acceptedCount').textContent = acceptedCount;
-                            
-                            displayRecentApplications(applications.slice(0, 5));
+                // 获取所有学生数据以统计每年的学生人数
+                let allStudents = [];
+                try {
+                    let page = 0;
+                    let hasMore = true;
+                    while (hasMore) {
+                        const studentResponse = await fetch(`/api/students?page=${page}&size=100`, { headers });
+                        const studentData = await studentResponse.json();
+                        if (studentData.code === 200) {
+                            const students = studentData.data.content ? studentData.data.content : studentData.data;
+                            allStudents = allStudents.concat(students);
+                            if (studentData.data && studentData.data.last) {
+                                hasMore = false;
+                            } else if (!studentData.data || students.length === 0) {
+                                hasMore = false;
+                            } else {
+                                page++;
+                            }
+                            if (page > 100) hasMore = false;
+                        } else {
+                            hasMore = false;
+                        }
                         }
                     } catch (error) {
-                        console.error('解析申请数据失败:', error);
-                        document.getElementById('applicationCount').textContent = '0';
-                        document.getElementById('acceptedCount').textContent = '0';
-                        document.getElementById('recentApplications').innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">暂无申请记录</div>';
+                    console.error('获取学生数据失败:', error);
+                }
+                
+                // 统计每年的学生人数（按签约时间）
+                const yearStats = {};
+                allStudents.forEach(s => {
+                    if (s.contractDate) {
+                        const year = new Date(s.contractDate).getFullYear();
+                        yearStats[year] = (yearStats[year] || 0) + 1;
                     }
-                } else if (results[appIndex] && results[appIndex].status === 'rejected') {
-                    // 请求被拒绝（权限不足）
-                    document.getElementById('applicationCount').textContent = '0';
-                    document.getElementById('acceptedCount').textContent = '0';
-                    document.getElementById('recentApplications').innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">暂无申请记录</div>';
+                });
+                
+                // 按年份降序排列（最新的年份在前）
+                const sortedYears = Object.keys(yearStats).sort((a, b) => parseInt(b) - parseInt(a));
+                
+                // 动态生成历年学生人数列表（网格布局，更紧凑）
+                const yearStatsContainer = document.getElementById('yearStatsContainer');
+                if (sortedYears.length === 0) {
+                    yearStatsContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 10px;">暂无数据</div>';
                 } else {
-                    // 没有权限时显示"--"
-                    document.getElementById('applicationCount').textContent = '--';
-                    document.getElementById('acceptedCount').textContent = '--';
-                    document.getElementById('recentApplications').innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">暂无权限查看申请记录</div>';
+                    // 使用网格布局，让年份横向排列
+                    yearStatsContainer.className = 'year-stats-grid';
+                    let html = '';
+                    sortedYears.forEach(year => {
+                        html += `
+                            <div class="year-stat-item">
+                                <span class="year-stat-label">${year}年</span>
+                                <span class="year-stat-value">${yearStats[year]}</span>
+                            </div>
+                        `;
+                    });
+                    yearStatsContainer.innerHTML = html;
                 }
 
                 // 根据角色控制卡片显示
@@ -299,25 +443,18 @@
                 const consultationButton = document.querySelector('.consultation-button');
                 const dashboardBottom = document.querySelector('.dashboard-bottom');
                 
-                // 管理员和顾问显示生日提醒
-                if (isAdmin || isCounselor) {
+                // 管理员、顾问和文案都显示生日提醒
+                if (isAdmin || isCounselor || isWriter) {
                     await checkBirthdays();
                 } else {
-                    // 其他角色隐藏生日提醒
-                    if (birthdayCard) birthdayCard.style.display = 'none';
+                    // 其他角色显示空状态
+                    document.getElementById('birthdayList').innerHTML = '<div style="color: #999; font-style: italic;">暂无权限查看</div>';
                 }
                 
-                // 文案不显示咨询客户管理
-                if (isWriter) {
-                    if (consultationButton) consultationButton.style.display = 'none';
-                    // 如果两个卡片都隐藏，隐藏整个底部区域
-                    if (birthdayCard && birthdayCard.style.display === 'none') {
-                        if (dashboardBottom) dashboardBottom.style.display = 'none';
-                    }
-                }
+                // 文案可以显示咨询客户管理（但只能看到分配给自己的客户）
+                // 不隐藏咨询客户管理按钮，因为文案也需要管理分配给自己的咨询客户
             } catch (error) {
                 console.error('加载数据失败:', error);
-                document.getElementById('recentApplications').innerHTML = '<div style="color: red; text-align: center; padding: 20px;">加载数据失败</div>';
             }
         }
         
@@ -337,12 +474,16 @@
                 const todayMonth = today.getMonth() + 1;
                 const todayDay = today.getDate();
 
+                // 先显示加载状态
+                document.getElementById('birthdayList').innerHTML = '<div style="color: #999; font-style: italic;">正在加载生日提醒...</div>';
+
+                // 使用overview接口，它已经包含了家庭信息，避免多次请求
                 let allStudents = [];
                 let page = 0;
                 let hasMore = true;
 
                 while (hasMore) {
-                    const response = await fetch(`/api/students?page=${page}&size=100`, { headers });
+                    const response = await fetch(`/api/students/overview?page=${page}&size=100`, { headers });
                     const data = await response.json();
 
                     if (data.code === 200 && data.data.content) {
@@ -353,16 +494,17 @@
                         } else {
                             hasMore = !data.data.last;
                         }
-                        if (page > 100) hasMore = false;
+                        if (page > 100) hasMore = false; // 安全限制，最多100页
                     } else {
                         hasMore = false;
                     }
                 }
 
                 const birthdayMessages = [];
+                
+                // 先处理学生生日（快速显示）
                 for (let i = 0; i < allStudents.length; i++) {
                     const student = allStudents[i];
-
                     if (student.birthDate) {
                         const dateStr = student.birthDate.split('T')[0];
                         const [year, month, day] = dateStr.split('-').map(Number);
@@ -370,42 +512,46 @@
                             birthdayMessages.push(`今天是 <strong>${student.name}</strong> 的生日 🎂`);
                         }
                     }
+                }
 
-                    try {
-                        const familyResponse = await fetch(`/api/family-info/student/${student.id}`, { headers });
-                        const familyData = await familyResponse.json();
-                        if (familyData.code === 200 && familyData.data) {
-                            const family = familyData.data;
+                // 如果有学生生日，先显示
+                if (birthdayMessages.length > 0) {
+                    document.getElementById('birthdayList').innerHTML = birthdayMessages.join('<br>');
+                }
 
-                            if (family.fatherBirthDate) {
-                                const dateStr = family.fatherBirthDate.split('T')[0];
-                                const [year, month, day] = dateStr.split('-').map(Number);
-                                if (month === todayMonth && day === todayDay) {
-                                    birthdayMessages.push(`今天是 <strong>${student.name}</strong> 的父亲 ${family.fatherName || '父亲'} 的生日 🎂`);
-                                }
-                            }
+                // 然后处理家庭信息（使用已有的familyInfo，不需要额外请求）
+                for (let i = 0; i < allStudents.length; i++) {
+                    const student = allStudents[i];
+                    const family = student.familyInfo; // 直接从学生对象获取，不需要额外请求
 
-                            if (family.motherBirthDate) {
-                                const dateStr = family.motherBirthDate.split('T')[0];
-                                const [year, month, day] = dateStr.split('-').map(Number);
-                                if (month === todayMonth && day === todayDay) {
-                                    birthdayMessages.push(`今天是 <strong>${student.name}</strong> 的母亲 ${family.motherName || '母亲'} 的生日 🎂`);
-                                }
+                    if (family) {
+                        if (family.fatherBirthDate) {
+                            const dateStr = family.fatherBirthDate.split('T')[0];
+                            const [year, month, day] = dateStr.split('-').map(Number);
+                            if (month === todayMonth && day === todayDay) {
+                                birthdayMessages.push(`今天是 <strong>${student.name}</strong> 的父亲 ${family.fatherName || '父亲'} 的生日 🎂`);
                             }
                         }
-                    } catch (e) {
-                        // 忽略获取家庭信息失败的情况
+
+                        if (family.motherBirthDate) {
+                            const dateStr = family.motherBirthDate.split('T')[0];
+                            const [year, month, day] = dateStr.split('-').map(Number);
+                            if (month === todayMonth && day === todayDay) {
+                                birthdayMessages.push(`今天是 <strong>${student.name}</strong> 的母亲 ${family.motherName || '母亲'} 的生日 🎂`);
+                            }
+                        }
                     }
                 }
 
+                // 更新显示
                 if (birthdayMessages.length > 0) {
                     document.getElementById('birthdayList').innerHTML = birthdayMessages.join('<br>');
                 } else {
                     document.getElementById('birthdayList').innerHTML = '<div style="color: #999; font-style: italic;">今日暂无生日提醒</div>';
                 }
-                document.getElementById('birthdayCard').style.display = 'block';
             } catch (error) {
                 console.error('检查生日失败:', error);
+                document.getElementById('birthdayList').innerHTML = '<div style="color: #dc3545; font-style: italic;">加载生日提醒失败</div>';
             }
         }
 
@@ -428,53 +574,6 @@
             }
         }
 
-        function displayRecentApplications(applications) {
-            const container = document.getElementById('recentApplications');
-            
-            if (applications.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">暂无申请记录</p>';
-                return;
-            }
-            
-            const statusMap = {
-                'DRAFT': '草稿',
-                'SUBMITTED': '已提交',
-                'UNDER_REVIEW': '审核中',
-                'ACCEPTED': '已录取',
-                'REJECTED': '已拒绝',
-                'WAITLISTED': '候补',
-                'WITHDRAWN': '已撤回'
-            };
-            
-            let html = '<table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #f8f9fa;"><th style="padding: 8px; text-align: left; font-size: 0.85rem; color: #666; font-weight: 600;">学生</th><th style="padding: 8px; text-align: left; font-size: 0.85rem; color: #666; font-weight: 600;">大学</th><th style="padding: 8px; text-align: left; font-size: 0.85rem; color: #666; font-weight: 600;">状态</th><th style="padding: 8px; text-align: left; font-size: 0.85rem; color: #666; font-weight: 600;">日期</th></tr></thead><tbody>';
-            
-            const statusColors = {
-                'DRAFT': { bg: '#e8eaf6', color: '#5c6bc0' },
-                'SUBMITTED': { bg: '#e3f2fd', color: '#1976d2' },
-                'UNDER_REVIEW': { bg: '#f3e5f5', color: '#7b1fa2' },
-                'ACCEPTED': { bg: '#e8f5e9', color: '#2e7d32' },
-                'REJECTED': { bg: '#ffebee', color: '#c62828' },
-                'WAITLISTED': { bg: '#fff3e0', color: '#ef6c00' },
-                'WITHDRAWN': { bg: '#fafafa', color: '#616161' }
-            };
-            
-            applications.forEach((app, index) => {
-                const statusColor = statusColors[app.status] || { bg: '#f5f5f5', color: '#757575' };
-                html += `<tr style="border-bottom: 1px solid #eee; ${index % 2 === 0 ? 'background: white;' : 'background: #fafafa;'}">
-                    <td style="padding: 8px; font-size: 0.85rem; font-weight: 500;">${app.student?.name || 'N/A'}</td>
-                    <td style="padding: 8px; font-size: 0.85rem;">${app.universityName || 'N/A'}</td>
-                    <td style="padding: 8px; font-size: 0.85rem;"><span style="background: ${statusColor.bg}; color: ${statusColor.color}; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; display: inline-block;">${statusMap[app.status] || app.status}</span></td>
-                    <td style="padding: 8px; font-size: 0.85rem; color: #666;">${app.applicationDate || 'N/A'}</td>
-                </tr>`;
-            });
-            
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-
-        function showAdvancedSearch() {
-            window.location.href = '/advanced-search.html';
-        }
 
         document.addEventListener('DOMContentLoaded', () => {
             loadDashboard();

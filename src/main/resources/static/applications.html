@@ -13,9 +13,7 @@
             <ul class="nav-links">
                 <li><a href="/dashboard.html">仪表盘</a></li>
                 <li><a href="/students.html">学生管理</a></li>
-                <li><a href="/universities.html">大学信息</a></li>
-                <li><a href="/applications.html">申请管理</a></li>
-                <li><a href="/register.html" id="register-nav-link" style="display: none;">注册新用户</a></li>
+                <li><a href="/user-management.html" id="user-management-nav-link" style="display: none;">用户管理</a></li>
                 <li><a href="#" onclick="showAdvancedSearch()" style="color: #667eea; font-weight: bold;">🔍 高级搜索</a></li>
                 <li><a href="#" onclick="logout()">退出登录</a></li>
             </ul>
@@ -43,7 +41,6 @@
                     <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                         <button class="btn" onclick="window.location.href='/dashboard.html'">返回仪表盘</button>
                         <button class="btn" onclick="window.location.href='/students.html'">查看我的资料</button>
-                        <button class="btn" onclick="window.location.href='/universities.html'">查看大学信息</button>
                     </div>
                 </div>
             </div>
@@ -118,7 +115,6 @@
                 <div class="form-group" id="studentIdGroup">
                     <label for="studentId">申请人 *</label>
                     <select id="studentId" name="studentId" required>
-                        <option value="">请选择申请人</option>
                     </select>
                 </div>
                 
@@ -128,11 +124,9 @@
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="universityId">申请学校 *</label>
-                            <select id="universityId" name="universityId" required>
-                                <option value="">请选择申请学校</option>
-                            </select>
-                            <small class="form-help">请选择您要申请的大学</small>
+                            <label for="universityName">申请学校 *</label>
+                            <input type="text" id="universityName" name="universityName" required placeholder="请输入学校名称，例如：纽约大学">
+                            <small class="form-help">直接输入申请学校的名称</small>
                         </div>
                         <div class="form-group">
                             <label for="major">申请专业 *</label>
@@ -145,7 +139,6 @@
                         <div class="form-group">
                             <label for="degreeType">学位类型 *</label>
                             <select id="degreeType" name="degreeType" required>
-                                <option value="">请选择</option>
                                 <option value="JUNIOR_HIGH">初中</option>
                                 <option value="HIGH_SCHOOL">高中</option>
                                 <option value="BACHELOR">本科</option>
@@ -534,7 +527,6 @@
     <script>
         let applications = [];
         let students = [];
-        let universities = [];
         let counselors = [];
         let paginationData = {
             currentPage: 0,
@@ -569,9 +561,8 @@
                 }
             }
             
-            // 检查至少有一个考试成绩
-            const hasTestScore = student.toeflScore || student.ieltsScore || 
-                                student.greScore || student.gmatScore;
+            // 检查是否有语言/标化成绩
+            const hasTestScore = student.languageScores && student.languageScores.trim() !== '';
             
             if (!hasTestScore) {
                 console.log('学生信息不完整，缺少考试成绩');
@@ -701,18 +692,6 @@
             }
         }
 
-        async function loadUniversities(skipDefaultOption = false) {
-            try {
-                const data = await apiRequest('/universities');
-                if (data.code === 200) {
-                    universities = data.data;
-                    populateUniversitySelect(skipDefaultOption);
-                }
-            } catch (error) {
-                console.error('加载大学数据失败:', error);
-            }
-        }
-
         async function loadCounselors() {
             try {
                 const data = await apiRequest('/users');
@@ -743,34 +722,13 @@
 
         function populateStudentSelect() {
             const select = document.getElementById('studentId');
-            select.innerHTML = '<option value="">请选择申请人</option>';
+            select.innerHTML = '';
             
             students.forEach(student => {
                 const option = document.createElement('option');
                 // 确保ID转换为字符串，避免类型不匹配问题
                 option.value = String(student.id);
                 option.textContent = `${student.name || 'N/A'}`;
-                select.appendChild(option);
-            });
-        }
-
-        function populateUniversitySelect(skipDefaultOption = false) {
-            const select = document.getElementById('universityId');
-            select.innerHTML = '';
-            
-            // 只有在不是编辑模式时才添加默认选项
-            if (!skipDefaultOption) {
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = '请选择申请学校';
-                select.appendChild(defaultOption);
-            }
-            
-            universities.forEach(university => {
-                const option = document.createElement('option');
-                // 确保ID转换为字符串，避免类型不匹配问题
-                option.value = String(university.id);
-                option.textContent = `${university.name} (${university.country})`;
                 select.appendChild(option);
             });
         }
@@ -968,10 +926,6 @@
                 studentSelect.style.fontSize = '14px';
                 
                 // 添加默认选项
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = '请选择申请人';
-                studentSelect.appendChild(defaultOption);
                 
                 // 替换input为select
                 studentNameDisplay.parentNode.replaceChild(studentSelect, studentNameDisplay);
@@ -1035,16 +989,16 @@
                 roleManager = new RoleManager();
             }
             
-            document.getElementById('modalTitle').textContent = '创建申请';
-            document.getElementById('submitText').textContent = '保存申请';
-            
-            // 隐藏申请流程指导
-            document.getElementById('applicationGuide').style.display = 'none';
-            
+                document.getElementById('modalTitle').textContent = '创建申请';
+                document.getElementById('submitText').textContent = '保存申请';
+                
+                // 隐藏申请流程指导
+                document.getElementById('applicationGuide').style.display = 'none';
+                
             // 管理员和咨询顾问可以创建申请
             if (roleManager && (roleManager.isAdmin() || roleManager.isCounselor())) {
-                // 加载学生、大学和咨询顾问数据
-                await Promise.all([loadStudents(), loadUniversities(), loadCounselors()]);
+                // 加载学生和咨询顾问信息
+                await Promise.all([loadStudents(), loadCounselors()]);
                 
                 // 显示所有字段
                 document.getElementById('studentIdGroup').style.display = 'block';
@@ -1100,8 +1054,8 @@
                 }
             } else if (roleManager && roleManager.isWriter()) {
                 // 文案角色也可以创建申请
-                // 加载学生、大学和咨询顾问数据（后端会自动过滤为文案负责的学生）
-                await Promise.all([loadStudents(), loadUniversities(), loadCounselors()]);
+                // 加载学生和咨询顾问数据（后端会自动过滤为文案负责的学生）
+                await Promise.all([loadStudents(), loadCounselors()]);
                 
                 // 检查是否有可用的学生
                 if (students.length === 0) {
@@ -1211,9 +1165,6 @@
             document.getElementById('applicationId').value = app.id;
             
             if (roleManager && roleManager.isStudent()) {
-                // 学生角色：只加载大学数据（编辑模式下跳过默认选项）
-                await loadUniversities(true);
-                
                 // 隐藏申请流程指导
                 document.getElementById('applicationGuide').style.display = 'none';
                 
@@ -1244,8 +1195,8 @@
                     return;
                 }
             } else if (roleManager && roleManager.isWriter()) {
-                // 文案角色：加载学生、大学和咨询顾问数据，自动获取申请人并禁用选择
-                await Promise.all([loadStudents(), loadUniversities(true), loadCounselors()]);
+                // 文案角色：加载学生和咨询顾问数据，自动获取申请人并禁用选择
+                await Promise.all([loadStudents(), loadCounselors()]);
                 
                 // 隐藏申请流程指导
                 document.getElementById('applicationGuide').style.display = 'none';
@@ -1286,8 +1237,8 @@
                     studentIdGroup.appendChild(hiddenStudentId);
                 }
             } else {
-                // 管理员和咨询顾问：加载学生、大学和咨询顾问数据（编辑模式下跳过默认选项）
-                await Promise.all([loadStudents(), loadUniversities(true), loadCounselors()]);
+                // 管理员和咨询顾问：加载学生和咨询顾问数据
+                await Promise.all([loadStudents(), loadCounselors()]);
                 
                 // 隐藏申请流程指导
                 document.getElementById('applicationGuide').style.display = 'none';
@@ -1375,111 +1326,14 @@
                                 // 设置完学生ID后，触发文案字段的自动设置
                                 if (window.autoSetWriterHandlerEdit) {
                                     window.autoSetWriterHandlerEdit.call(studentSelect);
-                                }
-                            }
+                }
+            }
                         }
                     }
                 }, 150);
             }
             
-            // 设置申请学校：根据universityName匹配
-            // 使用setTimeout确保DOM已完全更新和选项已生成
-            setTimeout(() => {
-                let universityId = '';
-                
-                // Application实体只有universityName字段，没有university对象
-                if (app.universityName && universities && universities.length > 0) {
-                    const normalizedAppName = app.universityName.trim();
-                    
-                    // 精确匹配：完全匹配大学名称
-                    let matchedUniversity = universities.find(u => {
-                        const normalizedUName = u.name.trim();
-                        return normalizedUName === normalizedAppName;
-                    });
-                    
-                    // 如果精确匹配失败，尝试部分匹配
-                    if (!matchedUniversity) {
-                        matchedUniversity = universities.find(u => {
-                            const normalizedUName = u.name.trim();
-                            return normalizedUName.includes(normalizedAppName) ||
-                                   normalizedAppName.includes(normalizedUName);
-                        });
-                    }
-                    
-                    if (matchedUniversity) {
-                        universityId = matchedUniversity.id;
-                        console.log(`找到匹配的大学: ${matchedUniversity.name}, ID: ${universityId}, 申请的大学名称: ${app.universityName}`);
-                    } else {
-                        console.warn(`未找到匹配的大学，申请的大学名称: ${app.universityName}, 可用大学列表:`, universities.map(u => u.name));
-                    }
-                }
-                
-                // 设置大学下拉框的值
-                const universitySelect = document.getElementById('universityId');
-                if (!universitySelect) return;
-                
-                if (universityId) {
-                    // 转换为字符串以确保类型匹配
-                    const universityIdStr = String(universityId);
-                    
-                    // 检查选项是否存在
-                    const optionExists = Array.from(universitySelect.options).some(
-                        opt => opt.value === universityIdStr
-                    );
-                    
-                    if (optionExists) {
-                        universitySelect.value = universityIdStr;
-                        // 验证设置是否成功
-                        if (universitySelect.value !== universityIdStr) {
-                            console.warn(`设置大学ID失败: 期望值=${universityIdStr}, 实际值=${universitySelect.value}`);
-                            // 如果设置失败，尝试通过选项文本匹配
-                            if (app.universityName) {
-                                const options = Array.from(universitySelect.options);
-                                const matchedOption = options.find(opt => {
-                                    const optionText = opt.textContent.trim();
-                                    const appName = app.universityName.trim();
-                                    return optionText.includes(appName) || 
-                                           optionText.startsWith(appName) ||
-                                           optionText.includes(`(${appName})`);
-                                });
-                                if (matchedOption) {
-                                    universitySelect.value = matchedOption.value;
-                                    console.log(`通过文本匹配成功设置大学: ${matchedOption.textContent}`);
-                                }
-                            }
-                        } else {
-                            const selectedOption = universitySelect.options[universitySelect.selectedIndex];
-                            console.log(`成功设置大学: ${selectedOption ? selectedOption.textContent : '未知'}`);
-                        }
-                    } else if (app.universityName) {
-                        // 如果通过ID找不到，尝试通过选项文本匹配
-                        const options = Array.from(universitySelect.options);
-                        const normalizedAppName = app.universityName.trim();
-                        const matchedOption = options.find(opt => {
-                            const optionText = opt.textContent.trim();
-                            return optionText.includes(normalizedAppName) || 
-                                   optionText.startsWith(normalizedAppName) ||
-                                   optionText.includes(`(${normalizedAppName})`);
-                        });
-                        if (matchedOption) {
-                            universitySelect.value = matchedOption.value;
-                        }
-                    }
-                } else if (app.universityName) {
-                    // 如果universityId为空，直接通过文本匹配
-                    const options = Array.from(universitySelect.options);
-                    const normalizedAppName = app.universityName.trim();
-                    const matchedOption = options.find(opt => {
-                        const optionText = opt.textContent.trim();
-                        return optionText.includes(normalizedAppName) || 
-                               optionText.startsWith(normalizedAppName);
-                    });
-                    if (matchedOption) {
-                        universitySelect.value = matchedOption.value;
-                    }
-                }
-            }, 100);
-            
+            document.getElementById('universityName').value = app.universityName || '';
             document.getElementById('major').value = app.major || '';
             document.getElementById('country').value = app.country || '';
             document.getElementById('degreeType').value = app.degreeType || '';
@@ -1545,7 +1399,7 @@
                 }
             } else {
                 // 非文案角色，正常设置文案下拉框的值
-                document.getElementById('writerId').value = app.writer?.id || '';
+            document.getElementById('writerId').value = app.writer?.id || '';
             }
             
             document.getElementById('notes').value = app.notes || '';
@@ -1554,7 +1408,7 @@
             
             // 聚焦到第一个输入字段
             setTimeout(() => {
-                document.getElementById('universityId').focus();
+                document.getElementById('universityName').focus();
             }, 100);
         }
 
@@ -1852,7 +1706,7 @@
                 const studentIdSelect = document.getElementById('studentId');
                 const studentIdValue = (studentIdHidden && studentIdHidden.value) || 
                                       (studentIdSelect && studentIdSelect.value) || '';
-                const universityIdValue = document.getElementById('universityId').value;
+                const universityNameValue = document.getElementById('universityName').value.trim();
                 
                 // 验证学生ID
                 if (!studentIdValue) {
@@ -1865,10 +1719,10 @@
                     return;
                 }
                 
-                // 验证大学ID
-                if (!universityIdValue) {
-                    console.error('大学ID为空，无法提交表单');
-                    showMessage('请先选择申请学校', 'error');
+                // 验证申请学校
+                if (!universityNameValue) {
+                    console.error('申请学校为空，无法提交表单');
+                    showMessage('请先填写申请学校', 'error');
                     // 恢复按钮状态
                     submitBtn.disabled = false;
                     submitText.style.display = 'inline';
@@ -1876,16 +1730,9 @@
                     return;
                 }
                 
-                // 获取大学名称
-                let universityName = '';
-                if (universityIdValue) {
-                    const selectedUniversity = universities.find(u => u.id === parseInt(universityIdValue));
-                    universityName = selectedUniversity ? selectedUniversity.name : '';
-                }
-                
                 const formData = {
                     student: { id: parseInt(studentIdValue) },
-                    universityName: universityName,
+                    universityName: universityNameValue,
                     major: document.getElementById('major').value.trim(),
                     country: document.getElementById('country').value.trim(),
                     degreeType: document.getElementById('degreeType').value,
@@ -1926,8 +1773,8 @@
                     const writerIdSelect = document.getElementById('writerId');
                     const writerId = (writerIdHidden && writerIdHidden.value) || 
                                     (writerIdSelect && writerIdSelect.value) || '';
-                    if (writerId) {
-                        formData.writer = { id: parseInt(writerId) };
+                if (writerId) {
+                    formData.writer = { id: parseInt(writerId) };
                         console.warn('学生没有文案，使用表单中的文案ID:', writerId);
                     }
                 }
@@ -1968,7 +1815,7 @@
         
         // 表单验证函数
         function validateForm() {
-            const universityId = document.getElementById('universityId').value;
+            const universityName = document.getElementById('universityName').value.trim();
             const major = document.getElementById('major').value.trim();
             const degreeType = document.getElementById('degreeType').value;
             
@@ -1978,8 +1825,8 @@
             let isValid = true;
             let errorMessage = '';
             
-            if (!universityId) {
-                showFieldError('universityId', '请选择申请学校');
+            if (!universityName) {
+                showFieldError('universityName', '请输入申请学校');
                 isValid = false;
             }
             
@@ -2103,6 +1950,13 @@
         window.addEventListener('load', function() {
             console.log('applications.html: 页面加载完成，准备初始化');
             console.log('当前token:', isAuthenticated() ? '存在' : '不存在');
+            
+            // 检查权限，显示/隐藏用户管理链接
+            const currentUser = getUser();
+            const userManagementLink = document.getElementById('user-management-nav-link');
+            if (userManagementLink) {
+                userManagementLink.style.display = (currentUser && currentUser.role === 'SUPER_ADMIN') ? 'block' : 'none';
+            }
             
             // 等待角色管理器初始化完成（roleManager.js会在DOMContentLoaded中初始化）
             setTimeout(() => {

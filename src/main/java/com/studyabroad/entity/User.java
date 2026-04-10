@@ -64,9 +64,10 @@ public class User {
      * 用户角色枚举
      */
     public enum UserRole {
-        ADMIN,      // 管理员
-        COUNSELOR,  // 咨询顾问
-        WRITER      // 文案
+        SUPER_ADMIN, // 超级管理员
+        ADMIN,       // 普通管理员（老板、文案主管）
+        COUNSELOR,   // 咨询顾问
+        WRITER       // 文案
     }
 }
 

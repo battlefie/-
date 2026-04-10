@@ -18,15 +18,15 @@ public class CreateStudentWithFamilyRequest extends CreateStudentWithUserRequest
     public static class FamilyInfoDto {
         // 父亲信息
         private String fatherName;
-        private String fatherPhone;
-        private String fatherOccupation;
-        private String fatherCompany;
+        private String fatherContact;
+        private String fatherWorkInfo;
+        private String fatherEducation;
         
         // 母亲信息
         private String motherName;
-        private String motherPhone;
-        private String motherOccupation;
-        private String motherCompany;
+        private String motherContact;
+        private String motherWorkInfo;
+        private String motherEducation;
         
         // 家庭资产信息
         private BigDecimal annualIncome;
@@ -36,14 +36,10 @@ public class CreateStudentWithFamilyRequest extends CreateStudentWithUserRequest
         private BigDecimal fundValue;
         private BigDecimal depositValue;
         private BigDecimal otherInvestmentValue;
+        private BigDecimal totalAssets;
         
-        // 其他家庭信息
-        private String familyAddress;
-        private Integer familySize;
-        private String emergencyContactName;
-        private String emergencyContactPhone;
-        private String emergencyContactRelation;
-        private String notes;
+        // 兄弟姐妹信息
+        private String siblingsInfo;
     }
 }
 

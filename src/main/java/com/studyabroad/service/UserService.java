@@ -20,15 +20,24 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final PermissionService permissionService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtUtil jwtUtil,
+                       PermissionService permissionService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.permissionService = permissionService;
     }
 
     @Transactional
     public Map<String, Object> register(RegisterRequest request) {
+        if (!permissionService.isSuperAdmin()) {
+            throw new RuntimeException("只有超级管理员可以创建账号");
+        }
+
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("用户名已存在");
         }
@@ -98,8 +107,51 @@ public class UserService {
 
     @Transactional
     public User updateUser(Long id, User userDetails) {
+        User currentUser = permissionService.getCurrentUser();
+        boolean isSuperAdmin = permissionService.isSuperAdmin();
+        boolean isAdmin = permissionService.isAdmin();
+
+        // 权限检查：只有超级管理员和管理员可以修改其他用户的信息
+        // 普通用户只能修改自己的信息
+        if (!isSuperAdmin && !isAdmin) {
+            if (currentUser == null || !currentUser.getId().equals(id)) {
+                throw new RuntimeException("没有权限修改其他用户的信息");
+            }
+        }
+
         User user = getUserById(id);
         
+        // 只有超级管理员可以修改用户名
+        if (userDetails.getUsername() != null && !userDetails.getUsername().trim().isEmpty() 
+            && !userDetails.getUsername().equals(user.getUsername())) {
+            if (!isSuperAdmin) {
+                throw new RuntimeException("只有超级管理员可以修改用户名");
+            }
+            // 检查新用户名是否已被其他用户使用
+            if (userRepository.existsByUsername(userDetails.getUsername().trim())) {
+                throw new RuntimeException("用户名已被使用");
+            }
+            user.setUsername(userDetails.getUsername().trim());
+        }
+        
+        // 只有超级管理员可以修改其他用户的密码和角色
+        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+            if (!isSuperAdmin) {
+                throw new RuntimeException("只有超级管理员可以修改用户密码");
+            }
+            // 如果提供了新密码，加密后更新
+            user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+        }
+        
+        // 只有超级管理员可以修改用户角色
+        if (userDetails.getRole() != null && !userDetails.getRole().equals(user.getRole())) {
+            if (!isSuperAdmin) {
+                throw new RuntimeException("只有超级管理员可以修改用户角色");
+            }
+            user.setRole(userDetails.getRole());
+        }
+        
+        // 管理员和超级管理员都可以修改邮箱、姓名、电话等信息
         if (userDetails.getEmail() != null && !userDetails.getEmail().equals(user.getEmail())) {
             if (userRepository.existsByEmail(userDetails.getEmail())) {
                 throw new RuntimeException("邮箱已被使用");
@@ -113,7 +165,20 @@ public class UserService {
         if (userDetails.getPhone() != null) {
             user.setPhone(userDetails.getPhone());
         }
+        
+        // 只有超级管理员可以修改账户启用状态，但不能停用其他超级管理员
         if (userDetails.getEnabled() != null) {
+            if (!isSuperAdmin) {
+                throw new RuntimeException("只有超级管理员可以修改账户启用状态");
+            }
+            // 不能停用其他超级管理员
+            if (user.getRole() == User.UserRole.SUPER_ADMIN && !userDetails.getEnabled()) {
+                throw new RuntimeException("不能停用其他超级管理员的账户");
+            }
+            // 不能停用自己
+            if (currentUser != null && currentUser.getId().equals(id) && !userDetails.getEnabled()) {
+                throw new RuntimeException("不能停用当前登录的账户");
+            }
             user.setEnabled(userDetails.getEnabled());
         }
         
@@ -122,6 +187,31 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
+        // 只有超级管理员可以删除用户
+        if (!permissionService.isSuperAdmin()) {
+            throw new RuntimeException("只有超级管理员可以删除用户");
+        }
+
+        User currentUser = permissionService.getCurrentUser();
+        if (currentUser != null && currentUser.getId().equals(id)) {
+            throw new RuntimeException("无法删除当前登录的账户");
+        }
+
+        User userToDelete = getUserById(id);
+        
+        // 不允许删除其他超级管理员
+        if (userToDelete.getRole() == User.UserRole.SUPER_ADMIN) {
+            throw new RuntimeException("不允许删除其他超级管理员账户");
+        }
+        
+        // 允许删除普通管理员、顾问和文案
+        
+        // 对于文案，applications表的外键约束会自动处理（ON DELETE SET NULL）
+        // 删除文案时，其负责的申请记录的writer_id会自动设置为NULL
+        
+        // 对于顾问，students表和consultation_clients表的外键约束会自动处理（ON DELETE SET NULL）
+        // 对于文案，students表和consultation_clients表的外键约束也会自动处理（ON DELETE SET NULL）
+        // 删除用户
         userRepository.deleteById(id);
     }
 

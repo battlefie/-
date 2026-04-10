@@ -9,7 +9,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 权限服务类
@@ -39,11 +38,23 @@ public class PermissionService {
     }
 
     /**
-     * 检查当前用户是否为管理员
+     * 检查当前用户是否为超级管理员
+     */
+    public boolean isSuperAdmin() {
+        User currentUser = getCurrentUser();
+        return currentUser != null && currentUser.getRole() == User.UserRole.SUPER_ADMIN;
+    }
+
+    /**
+     * 检查当前用户是否为具备管理员权限的角色（超级管理员或普通管理员）
      */
     public boolean isAdmin() {
         User currentUser = getCurrentUser();
-        return currentUser != null && "ADMIN".equals(currentUser.getRole().name());
+        if (currentUser == null) {
+            return false;
+        }
+        User.UserRole role = currentUser.getRole();
+        return role == User.UserRole.SUPER_ADMIN || role == User.UserRole.ADMIN;
     }
 
     /**
@@ -51,7 +62,7 @@ public class PermissionService {
      */
     public boolean isCounselor() {
         User currentUser = getCurrentUser();
-        return currentUser != null && "COUNSELOR".equals(currentUser.getRole().name());
+        return currentUser != null && currentUser.getRole() == User.UserRole.COUNSELOR;
     }
 
     /**
@@ -59,7 +70,7 @@ public class PermissionService {
      */
     public boolean isWriter() {
         User currentUser = getCurrentUser();
-        return currentUser != null && "WRITER".equals(currentUser.getRole().name());
+        return currentUser != null && currentUser.getRole() == User.UserRole.WRITER;
     }
 
     /**
@@ -67,17 +78,12 @@ public class PermissionService {
      * 管理员可以访问所有用户，咨询顾问只能访问自己指导的学生
      */
     public boolean canAccessUser(Long userId) {
-        if (isAdmin()) {
-            return true; // 管理员可以访问所有用户
+        if (isSuperAdmin()) {
+            return true; // 超级管理员可以访问所有用户
         }
         
-        if (isCounselor()) {
-            // 咨询顾问只能访问自己的申请相关用户
-            // 这里简化处理，实际应该检查用户与顾问的关联关系
-            return true;
-        }
-        
-        return false;
+        User currentUser = getCurrentUser();
+        return currentUser != null && currentUser.getId().equals(userId);
     }
 
     /**

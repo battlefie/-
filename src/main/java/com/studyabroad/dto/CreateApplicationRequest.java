@@ -11,6 +11,8 @@ import java.time.LocalDate;
 public class CreateApplicationRequest {
     private Long studentId;
     private String universityName;
+    private String universityEmail;
+    private String universityEmailPassword;
     private String country;
     private String major;
     private Application.DegreeType degreeType;
@@ -18,6 +20,7 @@ public class CreateApplicationRequest {
     private LocalDate applicationDate;
     private LocalDate visaSubmissionDate;
     private LocalDate interviewDate;
+    private LocalDate fingerprintCollectionDate;
     private LocalDate medicalExamDate;
     private LocalDate visaApprovedDate;
     private LocalDate visaRejectedDate;

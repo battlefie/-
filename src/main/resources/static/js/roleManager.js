@@ -19,8 +19,12 @@ class RoleManager {
     }
 
     // 检查用户角色
+    isSuperAdmin() {
+        return this.currentUser && this.currentUser.role === 'SUPER_ADMIN';
+    }
+
     isAdmin() {
-        return this.currentUser && this.currentUser.role === 'ADMIN';
+        return this.isSuperAdmin() || (this.currentUser && this.currentUser.role === 'ADMIN');
     }
 
     isCounselor() {
@@ -39,16 +43,12 @@ class RoleManager {
     hasPermission(feature) {
         switch (feature) {
             case 'user_management':
-                return this.isAdmin();
+                return this.isSuperAdmin();
             case 'student_management':
-                return this.isAdmin() || this.isCounselor();
-            case 'university_management':
-                return this.isAdmin();
-            case 'application_management':
-                return this.isAdmin() || this.isWriter();
-            case 'view_applications':
                 return this.isAdmin() || this.isCounselor() || this.isWriter();
-            case 'view_universities':
+            case 'application_management':
+                return this.isAdmin() || this.isWriter() || this.isCounselor();
+            case 'view_applications':
                 return this.isAdmin() || this.isCounselor() || this.isWriter();
             default:
                 return false;
@@ -81,20 +81,28 @@ class RoleManager {
                     link.style.display = 'block';
                     break;
                 case '/students.html':
-                    // 学生管理：管理员和咨询顾问
+                    // 学生管理：管理员、咨询顾问和文案可以访问
                     link.style.display = this.hasPermission('student_management') ? 'block' : 'none';
                     break;
-                case '/universities.html':
-                    // 大学信息：所有角色都可以访问
-                    link.style.display = 'block';
-                    break;
                 case '/applications.html':
-                    // 申请管理：只有管理员和文案可以访问
-                    link.style.display = (this.isAdmin() || this.isWriter()) ? 'block' : 'none';
+                    // 申请管理：管理员、咨询顾问和文案可以访问
+                    link.style.display = (this.isAdmin() || this.isWriter() || this.isCounselor()) ? 'block' : 'none';
+                    break;
+                case '/consultation-clients.html':
+                    // 咨询客户管理：管理员、咨询顾问和文案可以访问
+                    link.style.display = (this.isAdmin() || this.isWriter() || this.isCounselor()) ? 'block' : 'none';
                     break;
                 case '/register.html':
-                    // 注册页面：只有管理员可以访问
-                    link.style.display = this.isAdmin() ? 'block' : 'none';
+                    // 注册页面：只有超级管理员可以访问
+                    link.style.display = this.isSuperAdmin() ? 'block' : 'none';
+                    break;
+                case '/user-management.html':
+                    // 用户管理：只有超级管理员可以访问
+                    link.style.display = this.isSuperAdmin() ? 'block' : 'none';
+                    break;
+                case '/conversion-rate.html':
+                    // 转化率统计：只有超级管理员可以访问
+                    link.style.display = this.isSuperAdmin() ? 'block' : 'none';
                     break;
                 default:
                     // 退出登录按钮对所有角色都显示
@@ -115,9 +123,6 @@ class RoleManager {
             case '/students.html':
                 this.updateStudentPage();
                 break;
-            case '/universities.html':
-                this.updateUniversityPage();
-                break;
             case '/applications.html':
                 this.updateApplicationPage();
                 break;
@@ -126,23 +131,15 @@ class RoleManager {
 
     // 更新学生管理页面
     updateStudentPage() {
-        // 隐藏添加学生按钮（只有管理员和咨询顾问可以添加学生）
-        const addButton = document.querySelector('button[onclick="showAddModal()"]');
+        // 隐藏添加学生按钮（只有管理员和咨询顾问可以添加学生，文案不能添加）
+        const addButton = document.getElementById('addStudentBtn') || document.querySelector('button[onclick="showAddModal()"]');
         if (addButton) {
-            addButton.style.display = this.hasPermission('student_management') ? 'block' : 'none';
+            // 只有管理员和顾问可以看到添加按钮，文案不能添加学生
+            addButton.style.display = (this.isAdmin() || this.isCounselor()) ? 'block' : 'none';
         }
 
         // 不再需要单独为顾问加载数据，因为students.html的loadStudents已经会调用
         // 后端API会根据用户角色自动过滤数据
-    }
-
-    // 更新大学信息页面
-    updateUniversityPage() {
-        // 所有角色都可以查看大学信息，但只有管理员可以添加大学
-        const addButton = document.querySelector('button[onclick="showAddModal()"]');
-        if (addButton) {
-            addButton.style.display = this.hasPermission('university_management') ? 'block' : 'none';
-        }
     }
 
     // 更新申请管理页面
@@ -176,6 +173,7 @@ class RoleManager {
     // 显示角色信息
     displayRoleInfo() {
         const roleNames = {
+            'SUPER_ADMIN': '超级管理员',
             'ADMIN': '管理员',
             'COUNSELOR': '咨询顾问',
             'WRITER': '文案'

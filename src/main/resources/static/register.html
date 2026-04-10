@@ -52,8 +52,8 @@
         // 页面加载时检查权限
         document.addEventListener('DOMContentLoaded', () => {
             const currentUser = getUser();
-            if (!currentUser || currentUser.role !== 'ADMIN') {
-                // 不是管理员，显示提示并禁用表单
+            if (!currentUser || currentUser.role !== 'SUPER_ADMIN') {
+                // 不是超级管理员，显示提示并禁用表单
                 const form = document.getElementById('registerForm');
                 const submitBtn = form.querySelector('button[type="submit"]');
                 
@@ -65,7 +65,7 @@
                 // 显示提示信息
                 const alertDiv = document.createElement('div');
                 alertDiv.className = 'alert alert-error';
-                alertDiv.textContent = '只有管理员可以注册账号，请联系管理员为您创建账号';
+                alertDiv.textContent = '只有超级管理员可以注册账号，请联系管理员为您创建账号';
                 form.parentNode.insertBefore(alertDiv, form);
                 
                 // 禁用所有输入框
@@ -80,8 +80,8 @@
             e.preventDefault();
             
             const currentUser = getUser();
-            if (!currentUser || currentUser.role !== 'ADMIN') {
-                showMessage('只有管理员可以注册账号', 'error');
+            if (!currentUser || currentUser.role !== 'SUPER_ADMIN') {
+                showMessage('只有超级管理员可以注册账号', 'error');
                 return;
             }
             

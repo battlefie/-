@@ -12,15 +12,15 @@ public class CreateFamilyInfoRequest {
     private Long studentId;
     private String fatherName;
     private LocalDate fatherBirthDate;
-    private String fatherPhone;
-    private String fatherOccupation;
-    private String fatherCompany;
+    private String fatherContact;
+    private String fatherWorkInfo;
+    private String fatherEducation;
     private BigDecimal fatherIncome;
     private String motherName;
     private LocalDate motherBirthDate;
-    private String motherPhone;
-    private String motherOccupation;
-    private String motherCompany;
+    private String motherContact;
+    private String motherWorkInfo;
+    private String motherEducation;
     private BigDecimal motherIncome;
     private BigDecimal annualIncome;
     private BigDecimal realEstateValue;
@@ -30,10 +30,5 @@ public class CreateFamilyInfoRequest {
     private BigDecimal depositValue;
     private BigDecimal otherInvestmentValue;
     private BigDecimal totalAssets;
-    private String familyAddress;
-    private Integer familySize;
-    private String emergencyContactName;
-    private String emergencyContactPhone;
-    private String emergencyContactRelation;
-    private String notes;
+    private String siblingsInfo;
 }

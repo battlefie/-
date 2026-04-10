@@ -20,6 +20,10 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     
     List<Application> findByStudentId(Long studentId);
     
+    Page<Application> findByStudentId(Long studentId, Pageable pageable);
+
+    List<Application> findByStudentIdIn(List<Long> studentIds);
+    
     List<Application> findByUniversityName(String universityName);
     
     List<Application> findByStatus(Application.ApplicationStatus status);

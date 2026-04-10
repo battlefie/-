@@ -27,10 +27,6 @@ public class CreateStudentWithUserRequest {
     private String university;
     private String major;
     private Double gpa;
-    private Integer toeflScore;
-    private Double ieltsScore;
-    private Integer greScore;
-    private Integer gmatScore;
     private String awards;
     private String experiences;
     private String notes;
